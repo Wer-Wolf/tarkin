@@ -5,49 +5,77 @@
 from __future__ import annotations
 from unittest import TestCase
 from typing import Final
-from tarkin.type import Type, DataType
+from construct import StreamError
+from tarkin.type import Type, DataType, MOF_DATA_TYPE
 
 
-TEST_INT32_ARRAY: Final = 0x2003
-TEST_OBJECT: Final = 0x000d
-TEST_STRING: Final = 0x0008
-TEST_BOOL: Final = 0x000b
+TEST_SINT32_ARRAY: Final = b"\x03\x20\x00\x00"
+TEST_OBJECT: Final = b"\x0d\x00\x00\x00"
+TEST_STRING: Final = b"\x08\x00\x00\x00"
+TEST_BOOL: Final = b"\x0b\x00\x00\x00"
 
-TEST_INVALID: Final = 0x00ff
+TEST_INVALID_TYPE: Final = b"\xff\xff\x00\x00"
+TEST_INVALID_LENGTH: Final = b"\xff\xff\x00"
+
+TEST_TYPE_SINT32_ARRAY: Final = Type(
+    basic_type=DataType.SINT32,
+    is_array=True
+)
+TEST_TYPE_STRING: Final = Type(
+    basic_type=DataType.STRING,
+    is_array=False
+)
+TEST_TYPE_BOOL: Final = Type(
+    basic_type=DataType.BOOLEAN,
+    is_array=False
+)
+TEST_TYPE_OBJECT: Final = Type(
+    basic_type=DataType.OBJECT,
+    is_array=False
+)
 
 
 class TypeTest(TestCase):
     """Tests for data type parsing"""
 
-    def test_int32_array(self) -> None:
-        """Test parsing of an int32 array type"""
-        array = Type.from_int(TEST_INT32_ARRAY)
+    def test_parse_int32_array(self) -> None:
+        """Test parsing of an sint32 array type"""
+        self.assertEqual(MOF_DATA_TYPE.parse(TEST_SINT32_ARRAY), TEST_TYPE_SINT32_ARRAY)
 
-        self.assertEqual(array.basic_type, DataType.SINT32)
-        self.assertEqual(array.is_array, True)
-
-    def test_object(self) -> None:
+    def test_parse_object(self) -> None:
         """Test parsing of an object type"""
-        array = Type.from_int(TEST_OBJECT)
+        self.assertEqual(MOF_DATA_TYPE.parse(TEST_OBJECT), TEST_TYPE_OBJECT)
 
-        self.assertEqual(array.basic_type, DataType.OBJECT)
-        self.assertEqual(array.is_array, False)
-
-    def test_string(self) -> None:
+    def test_parse_string(self) -> None:
         """Test parsing of an string type"""
-        array = Type.from_int(TEST_STRING)
+        self.assertEqual(MOF_DATA_TYPE.parse(TEST_STRING), TEST_TYPE_STRING)
 
-        self.assertEqual(array.basic_type, DataType.STRING)
-        self.assertEqual(array.is_array, False)
-
-    def test_bool(self) -> None:
+    def test_parse_bool(self) -> None:
         """Test parsing of an boolean type"""
-        array = Type.from_int(TEST_BOOL)
+        self.assertEqual(MOF_DATA_TYPE.parse(TEST_BOOL), TEST_TYPE_BOOL)
 
-        self.assertEqual(array.basic_type, DataType.BOOLEAN)
-        self.assertEqual(array.is_array, False)
-
-    def test_invalid(self) -> None:
+    def test_parse_invalid_type(self) -> None:
         """Test parsing of an invalid type"""
         with self.assertRaises(ValueError):
-            Type.from_int(TEST_INVALID)
+            MOF_DATA_TYPE.parse(TEST_INVALID_TYPE)
+
+    def test_parse_invalid_length(self) -> None:
+        """Test parsing of an type with an invalid length"""
+        with self.assertRaises(StreamError):
+            MOF_DATA_TYPE.parse(TEST_INVALID_LENGTH)
+
+    def test_build_int32_array(self) -> None:
+        """Test building of an buffer containg an sint32 array type"""
+        self.assertEqual(MOF_DATA_TYPE.build(TEST_TYPE_SINT32_ARRAY), TEST_SINT32_ARRAY)
+
+    def test_build_object(self) -> None:
+        """Test building of an buffer containg an object type"""
+        self.assertEqual(MOF_DATA_TYPE.build(TEST_TYPE_OBJECT), TEST_OBJECT)
+
+    def test_build_string(self) -> None:
+        """Test building of an buffer containg an string type"""
+        self.assertEqual(MOF_DATA_TYPE.build(TEST_TYPE_STRING), TEST_STRING)
+
+    def test_build_bool(self) -> None:
+        """Test building of an buffer containg an boolean type"""
+        self.assertEqual(MOF_DATA_TYPE.build(TEST_TYPE_BOOL), TEST_BOOL)
