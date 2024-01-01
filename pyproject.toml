@@ -18,7 +18,7 @@ classifiers = [
     "Typing :: Typed"
 ]
 dependencies = [
-    # TODO
+    "construct ~= 2.10.7"
 ]
 
 [project.optional-dependencies]
@@ -42,16 +42,52 @@ Bugtracker = "https://github.com/Wer-Wolf/tarkin/issues"
 eppidtool = "tarkin.main:main_cli"
 
 [build-system]
-requires = ["setuptools >= 61.0.0"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
-[tool.setuptools.package-data]
-eppidtool = [
-    "py.typed"
+[tool.hatch.envs.test]
+dependencies = [
+    "coverage[toml] == 7.*"
 ]
 
+[tool.hatch.envs.test.scripts]
+test = "python -m unittest discover {args}"
+cov-run = "coverage run -m unittest discover {args}"
+cov-report = [
+    "- coverage combine",
+    "coverage report"
+]
+cov = [
+    "cov-run",
+    "cov-report"
+]
+
+[[tool.hatch.envs.test.matrix]]
+python = ["3.11", "3.12"]
+
+[tool.hatch.envs.lint]
+dependencies = [
+    "mypy >= 1.0.0",
+    "pylint >= 2.12.2",
+    "flake8 >= 5.0.0",
+    "isort >= 5.10.1"
+]
+
+[tool.hatch.envs.lint.scripts]
+lint = [
+    "- flake8 src/tarkin",
+    "- pylint src/tarkin"
+]
+typecheck = "mypy -p tarkin"
+release = [
+    "typecheck"
+]
+
+[tool.hatch.build.targets.sdist]
+exclude = ["/.github"]
+
 [tool.mypy]
-disallow_any_unimported = true
+ignore_missing_imports = true
 disallow_any_generics = true
 disallow_untyped_defs = true
 no_implicit_optional = true
@@ -60,3 +96,11 @@ warn_redundant_casts = true
 warn_unused_ignores = true
 warn_return_any = true
 warn_unreachable = true
+
+[tool.pylint]
+max-line-length = 100
+
+[tool.coverage.run]
+source_pkgs = ["tarkin"]
+branch = true
+parallel = true
