@@ -6,11 +6,8 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from enum import IntFlag, unique, STRICT
-from struct import Struct
-from typing import Final, Iterable
-
-FLAVOR_HEADER: Final = Struct('<16sI')
-FLAVOR_DATA: Final = Struct('2I')
+from typing import Final
+from construct import Struct, Const, Int32ul, PrefixedArray, Container, NoneOf, Adapter
 
 
 @unique
@@ -22,50 +19,45 @@ class Flavors(IntFlag, boundary=STRICT):
     AMENDED = 1 << 7
 
 
-def flavors_from_buffer(buffer: memoryview) -> Iterable[QualifierFlavor]:
-    """Parse qualifier flavors from buffer"""
-    magic, count = FLAVOR_HEADER.unpack(buffer[:FLAVOR_HEADER.size])
-    if magic != b"BMOFQUALFLAVOR11":
-        raise ValueError(f"Invalid flavor magic header: {magic}")
-
-    flavors = buffer[FLAVOR_HEADER.size:]
-    if len(flavors) != count * FLAVOR_DATA.size:
-        raise ValueError(f"Wrong flavor count: {count}")
-
-    for i in range(count):
-        offset = i * FLAVOR_DATA.size
-        yield QualifierFlavor.from_buffer(
-            flavors[offset:offset + FLAVOR_DATA.size]
-        )
-
-
 @dataclass(frozen=True, slots=True)
-class QualifierFlavor:
+class QualifierFlavor():
     """Qualifier flavor"""
 
     offset: int
 
-    to_instance: bool
-
-    to_subclass: bool
-
-    disable_override: bool
-
-    amended: bool
+    flavors: Flavors
 
     @classmethod
-    def from_buffer(cls, buffer: memoryview) -> QualifierFlavor:
-        """Parse single qualifier flavor"""
-        offset, flags = FLAVOR_DATA.unpack(buffer)
-        if offset == 0:
-            raise ValueError(f"Invalid flavor offset {offset}")
-
-        flavors = Flavors(flags)
-
+    def from_container(cls, container: Container) -> QualifierFlavor:
+        """Parse qualifier flavor from container"""
         return cls(
-            offset=offset,
-            to_instance=bool(flavors & Flavors.TO_INSTANCE),
-            to_subclass=bool(flavors & Flavors.TO_SUBCLASS),
-            disable_override=bool(flavors & Flavors.DISABLE_OVERRIDE),
-            amended=bool(flavors & Flavors.AMENDED)
+            offset=container["offset"],
+            flavors=Flavors(container["flavors"])
         )
+
+
+class FlavorsAdpater(Adapter):
+    """Adapter for converting an container into a list of qualifier flavors"""
+    def _decode(self, obj: PrefixedArray, context: object, path: object) -> list[QualifierFlavor]:
+        """Decode container to qualifier flavors"""
+        return [QualifierFlavor.from_container(entry) for entry in obj["entries"]]
+
+    def _encode(self, obj: list[QualifierFlavor], context: object, path: object) -> Struct:
+        """Encode qualifier flavors in an object"""
+        return dict(
+            entries=[dict(offset=q.offset, flavors=int(q.flavors)) for q in obj]
+        )
+
+
+MOF_FLAVORS: Final = FlavorsAdpater(
+    Struct(
+        "magic" / Const(b"BMOFQUALFLAVOR11"),
+        "entries" / PrefixedArray(
+            Int32ul,
+            Struct(
+                "offset" / NoneOf(Int32ul, {0}),
+                "flavors" / Int32ul,    # TODO Enum validator?
+            )
+        )
+    )
+)
