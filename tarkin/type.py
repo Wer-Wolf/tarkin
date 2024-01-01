@@ -58,9 +58,26 @@ class Type:
 
         return data_type
 
+    def __eq__(self, other: object) -> bool:
+        """Compare type"""
+        if isinstance(other, DataType):
+            if self.is_array:
+                return False
+
+            return self.basic_type == other
+
+        if isinstance(other, Type):
+            return self.basic_type == other.basic_type and self.is_array == other.is_array
+
+        return NotImplemented
+
+    def __hash__(self) -> int:
+        """Hash type"""
+        return int(self)
+
 
 class TypeAdapter(Adapter):
-    """Adapter vor converting an integer into an MOF data type"""
+    """Adapter for converting an integer into an MOF data type"""
     def _decode(self, obj: int, context: object, path: object) -> Type:
         """Decode integer to MOF data type"""
         return Type.from_int(obj)
