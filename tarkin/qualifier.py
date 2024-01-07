@@ -5,13 +5,10 @@
 
 from __future__ import annotations
 from dataclasses import dataclass
-from struct import Struct
 from typing import Final
-from .data import mof_parse_data, mof_parse_string
-from .type import Type
-
-
-QUALIFIER_HEADER: Final = Struct('<II4xI')     # TODO Unknown values
+from construct import Struct, Int32ul, Prefixed, PrefixedArray, this, Padding, PascalString, Adapter, Container, Tell, Terminated
+from .data import NullStripAdapter, MOF_DATA
+from .type import Type, MOF_DATA_TYPE
 
 
 @dataclass(frozen=True, slots=True)
@@ -27,24 +24,56 @@ class Qualifier:
     offset: int
 
     @classmethod
-    def from_buffer(cls, buffer: memoryview, offset: int) -> Qualifier:
-        """Parse qualifier from buffer"""
-        length, qualifier_type, name_length = QUALIFIER_HEADER.unpack(
-            buffer[:QUALIFIER_HEADER.size]
-        )
-        if len(buffer) != length:
-            raise ValueError(f"Qualifier length {length} does not match")
-
-        info_buffer = buffer[QUALIFIER_HEADER.size:]
-        if len(info_buffer) < name_length:
-            raise ValueError(f"Qualifier name length {name_length} too big")
-
-        name = mof_parse_string(info_buffer[:name_length])
-        data_type = Type.from_int(qualifier_type)
-
+    def from_container(cls, container: Container) -> Qualifier:
+        """Parse qualifier from container"""
         return cls(
-            name=name,
-            data_type=data_type,
-            value=mof_parse_data(data_type, info_buffer[name_length:]),
-            offset=offset
+            name=container["qualifier"]["name"],
+            data_type=container["qualifier"]["data_type"],
+            value=container["qualifier"]["value"],
+            offset=int(container["offset"])
         )
+
+
+class QualifiersAdapter(Adapter):
+    """Adapter for converting an container into a list of qualifiers"""
+    def _decode(self, obj: Container, context: object, path: object) -> list[Qualifier]:
+        """Decode integer to MOF data type"""
+        return [Qualifier.from_container(entry) for entry in obj["array"]]
+
+    def _encode(self, obj: list[Qualifier], context: object, path: object) -> Container:
+        """Encode MOF data type to integer"""
+        return dict(
+            entries=[dict(
+                data_type=qualifier.data_type,
+                name=qualifier.name,
+                value=qualifier.value
+            ) for qualifier in obj]
+        )
+
+
+MOF_QUALIFIERS: Final = QualifiersAdapter(
+    Prefixed(
+        Int32ul,
+        Struct(
+            "array" / PrefixedArray(
+                Int32ul,
+                Struct(
+                    "offset" / Tell,
+                    "qualifier" / Prefixed(
+                        Int32ul,
+                        Struct(
+                            "data_type" / MOF_DATA_TYPE,
+                            "unknown" / Padding(4),     # TODO: Unknown value
+                            "name" / NullStripAdapter(PascalString(Int32ul, "utf-16-le")),
+                            "value" / MOF_DATA(this.data_type),
+                            Terminated
+                        ),
+                        includelength=True
+                    )
+                )
+            ),
+            Terminated
+        ),
+        includelength=True
+    )
+)
