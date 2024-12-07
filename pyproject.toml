@@ -1,0 +1,88 @@
+[project]
+name = "tarkin"
+version = "0.0.1"
+description = "Tool for parsing Grand MOF(F)s"
+requires-python = ">=3.11"
+keywords = [
+    "WMI",
+    "BMOF"
+]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: GNU General Public License v2 or later (GPLv2+)",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: System :: Hardware",
+    "Topic :: Utilities",
+    "Typing :: Typed"
+]
+dependencies = [
+    "construct ~= 2.10.70",
+]
+
+[project.readme]
+file = "README.md"
+content-type = "text/markdown"
+
+[[project.authors]]
+name = "Armin Wolf"
+email = "armin.wolf@mailbox.tu-dresden.de"
+
+[project.urls]
+Repository = "https://os.inf.tu-dresden.de/repo/gitbox/armin.wolf/tarkin"
+Bugtracker = "https://os.inf.tu-dresden.de/repo/gitbox/armin.wolf/tarkin/issues"
+
+[project.scripts]
+tarkin = "tarkin.main:main_cli"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.envs.hatch-test]
+installer = "pip"
+
+[[tool.hatch.envs.hatch-test.matrix]]
+python = ["3.11", "3.12", "3.13"]
+
+[tool.hatch.envs.lint]
+dependencies = [
+    "mypy >= 1.0.0",
+    "pylint >= 2.12.2",
+    "flake8 >= 5.0.0",
+    "isort >= 5.10.1"
+]
+
+[tool.hatch.envs.lint.scripts]
+lint = [
+    "- flake8 src/tarkin",
+    "- pylint src/tarkin"
+]
+typecheck = "mypy -p tarkin"
+release = [
+    "typecheck"
+]
+
+[tool.hatch.build.targets.sdist]
+exclude = ["/.github"]
+
+[tool.mypy]
+ignore_missing_imports = true
+disallow_any_generics = true
+disallow_untyped_defs = true
+no_implicit_optional = true
+strict_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_return_any = true
+warn_unreachable = true
+
+[tool.pylint]
+max-line-length = 100
+
+[tool.coverage.run]
+source_pkgs = ["tarkin"]
+branch = true
+parallel = true
