@@ -1,0 +1,12 @@
+[WMI,
+ Dynamic,
+ Provider("WmiProv"),
+ Locale("MS\\0x409"),
+ Description("Simple class without any additional properties and methods"),
+ guid("{3710FCF7-95DE-4178-8643-453B92898000}")
+]
+class SimpleClass
+{
+    [key, read] string InstanceName;
+    [read] boolean Active;
+};
