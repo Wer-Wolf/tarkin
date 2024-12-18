@@ -4,6 +4,7 @@
 
 from argparse import ArgumentParser, Namespace
 from typing import Final
+from .bmof import Bmof, BMOF
 from . import __doc__ as description, __version__
 
 
@@ -31,11 +32,9 @@ ARGUMENT_PARSER.add_argument(
 
 def main(args: Namespace) -> int:
     """Entry point for the BMOF parsing tool"""
-    with open(args.path, mode='rb') as fd:
-        buffer = fd.read()
+    bmof: Bmof = BMOF.parse_file(args.path)
 
-    # TODO
-    print(buffer)
+    print(bmof)
 
     return 0
 
