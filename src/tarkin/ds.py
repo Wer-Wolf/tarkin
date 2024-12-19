@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-"""Drivespace decompression"""
+"""Doublespace decompression"""
 
 from __future__ import annotations
 from ctypes import CDLL, c_size_t, c_int, byref, POINTER, c_ubyte
@@ -21,14 +21,14 @@ LIB.ds_decompress.restype = c_int
 
 
 class CompressedDS(Tunnel):
-    """Adapter for converting an drivespace-compressed container"""
+    """Adapter for converting an doublespace-compressed container"""
     def __init__(self, subcon: Construct, length: Path):
         super().__init__(subcon)
         self.subcon = subcon
         self.length = length
 
     def _decode(self, data: bytes, context: Container, path: str):
-        """Drivespace decompression"""
+        """Doublespace decompression"""
         length: int = evaluate(self.length, context)
         buffer = bytearray(length)
 
@@ -47,10 +47,10 @@ class CompressedDS(Tunnel):
             raise OSError(-ret, strerror(-ret))
 
         if result_length.value != length:
-            raise RuntimeError("Drivespace compression did not consume all data")
+            raise RuntimeError("Doublespace compression did not consume all data")
 
         return buffer
 
     def _encode(self, data: bytes, context: Container, path: str):
-        """Drivespace compression"""
-        raise NotImplementedError("Drivespace compression not implemented")
+        """Doublespace compression"""
+        raise NotImplementedError("Doublespace compression not implemented")
