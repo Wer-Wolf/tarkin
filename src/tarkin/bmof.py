@@ -4,23 +4,28 @@
 
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import Final
+from typing import Final, Optional as TOptional
 from construct import Struct, Int32ul, Const, this, Container, Adapter, Rebuild, len_, \
-    Terminated, GreedyBytes, FixedSized
+    Terminated, FixedSized, Optional
 from .ds import CompressedDS
+from .flavor import BMOF_FLAVORS, QualifierFlavor
+from .root import BMOF_ROOT, Root
 
 
 @dataclass(frozen=True, slots=True)
 class Bmof:
     """Binary MOF"""
 
-    data: bytes
+    root: Root
+
+    flavors: TOptional[list[QualifierFlavor]]
 
     @classmethod
     def from_container(cls, container: Container) -> Bmof:
         """Parse BMOF from container"""
         return cls(
-            data=bytes(container["data"]),
+            root=container["data"]["root"],
+            flavors=container["data"]["flavors"]
         )
 
 
@@ -34,8 +39,10 @@ class BmofAdapter(Adapter):
     def _encode(self, obj: Bmof, context: Container, path: str) -> Container:
         """Encode Bmof class to container"""
         return Container(
-            final_length=len(obj.data),
-            data=obj.data
+            data=Container(
+                root=obj.root,
+                flavors=obj.flavors
+            )
         )
 
 
@@ -48,7 +55,11 @@ BMOF: Final = BmofAdapter(
         "data" / FixedSized(
             this.compressed_length,
             CompressedDS(
-                GreedyBytes,
+                Struct(
+                    "root" / BMOF_ROOT,
+                    "flavors" / Optional(BMOF_FLAVORS),
+                    Terminated
+                ),
                 this.final_length
             )
         ),
