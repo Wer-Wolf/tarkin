@@ -5,21 +5,22 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from typing import Final
-from construct import Struct, Int32ul, Const, Container, Adapter, GreedyBytes, FixedSized, \
-    Rebuild, this, len_
+from construct import Struct, Int32ul, Const, Container, Adapter, FixedSized, Rebuild, this, \
+    len_, PrefixedArray, Prefixed
+from .wmi_class import BMOF_WMI_CLASS, WmiClass
 
 
 @dataclass(frozen=True, slots=True)
 class Root:
     """Root structure"""
 
-    data: bytes
+    classes: list[WmiClass]
 
     @classmethod
     def from_container(cls, container: Container) -> Root:
         """Parse root structure from container"""
         return cls(
-            data=bytes(container["data"]),
+            classes=container["data"]["classes"]
         )
 
 
@@ -33,8 +34,9 @@ class RootAdapter(Adapter):
     def _encode(self, obj: Root, context: Container, path: str) -> Container:
         """Encode Root class to container"""
         return Container(
-            data=obj.data,
-            flavors=obj.flavors
+            data=Container(
+                classes=obj.classes
+            )
         )
 
 
@@ -44,7 +46,18 @@ BMOF_ROOT: Final = RootAdapter(
         "length" / Rebuild(Int32ul, len_(this)),
         "data" / FixedSized(
             lambda this: this.length - 8,   # 8 is the length of the "magic" and "length" fields
-            GreedyBytes
+            Struct(
+                "unknown1" / Const(1, Int32ul),
+                "unknown2" / Const(1, Int32ul),
+                "classes" / PrefixedArray(
+                    Int32ul,
+                    Prefixed(
+                        Int32ul,
+                        BMOF_WMI_CLASS,
+                        includelength=True
+                    )
+                )
+            )
         )
     )
 )
