@@ -5,7 +5,7 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from typing import Final
-from construct import Struct, GreedyBytes, Container, Adapter
+from construct import Struct, GreedyBytes, Container, Adapter, Prefixed, Int32ul
 
 
 @dataclass(frozen=True, slots=True)
@@ -37,7 +37,11 @@ class WmiMethodAdapter(Adapter):
 
 
 BMOF_WMI_METHOD: Final = WmiMethodAdapter(
-    Struct(
-        "data" / GreedyBytes
+    Prefixed(
+        Int32ul,
+        Struct(
+            "data" / GreedyBytes
+        ),
+        includelength=True
     )
 )

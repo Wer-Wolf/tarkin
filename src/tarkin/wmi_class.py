@@ -50,43 +50,39 @@ class WmiClassAdapter(Adapter):
 
 
 BMOF_WMI_CLASS: Final = WmiClassAdapter(
-    Struct(
-        "unknown" / Const(0, Int32ul),
-        "qualifiers_length" / Rebuild(Int32ul, len_(this.data.qualifiers)),
-        "length" / Rebuild(Int32ul, len_(this.data)),
-        "type" / Const(0, Int32ul),     # TODO Instance (0x1) support
-        "data" / FixedSized(
-            lambda context: context.length,
-            Struct(
-                "qualifiers" / FixedSized(
-                    lambda context: context._.qualifiers_length,
-                    Prefixed(
-                        Int32ul,
-                        PrefixedArray(
+    Prefixed(
+        Int32ul,
+        Struct(
+            "unknown" / Const(0, Int32ul),
+            "qualifiers_length" / Rebuild(Int32ul, len_(this.data.qualifiers)),
+            "length" / Rebuild(Int32ul, len_(this.data)),
+            "type" / Const(0, Int32ul),     # TODO Instance (0x1) support
+            "data" / FixedSized(
+                lambda context: context.length,
+                Struct(
+                    "qualifiers" / FixedSized(
+                        lambda context: context._.qualifiers_length,
+                        Prefixed(
                             Int32ul,
-                            Prefixed(
+                            PrefixedArray(
                                 Int32ul,
-                                BMOF_WMI_QUALIFIER,
-                                includelength=True
-                            )
-                        ),
-                        includelength=True
-                    )
-                ),
-                "class_data" / BMOF_WMI_CLASS_DATA
-            )
-        ),
-        "methods" / Prefixed(
-            Int32ul,
-            PrefixedArray(
-                Int32ul,
-                Prefixed(
-                    Int32ul,
-                    BMOF_WMI_METHOD,
-                    includelength=True
+                                BMOF_WMI_QUALIFIER
+                            ),
+                            includelength=True
+                        )
+                    ),
+                    "class_data" / BMOF_WMI_CLASS_DATA
                 )
             ),
-            includelength=True
-        )
+            "methods" / Prefixed(
+                Int32ul,
+                PrefixedArray(
+                    Int32ul,
+                    BMOF_WMI_METHOD
+                ),
+                includelength=True
+            )
+        ),
+        includelength=True
     )
 )

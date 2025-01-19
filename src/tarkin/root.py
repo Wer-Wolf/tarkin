@@ -6,7 +6,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Final
 from construct import Struct, Int32ul, Const, Container, Adapter, FixedSized, Rebuild, this, \
-    len_, PrefixedArray, Prefixed
+    len_, PrefixedArray
 from .wmi_class import BMOF_WMI_CLASS, WmiClass
 
 
@@ -51,11 +51,7 @@ BMOF_ROOT: Final = RootAdapter(
                 "unknown2" / Const(1, Int32ul),
                 "classes" / PrefixedArray(
                     Int32ul,
-                    Prefixed(
-                        Int32ul,
-                        BMOF_WMI_CLASS,
-                        includelength=True
-                    )
+                    BMOF_WMI_CLASS
                 )
             )
         )
