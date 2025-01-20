@@ -7,20 +7,20 @@ from dataclasses import dataclass
 from typing import Final
 from construct import Struct, Int32ul, Const, Container, Adapter, FixedSized, Rebuild, this, \
     len_, PrefixedArray
-from .wmi_class import BMOF_WMI_CLASS, WmiClass
+from .wmi_object import BMOF_WMI_OBJECT, WmiObject
 
 
 @dataclass(frozen=True, slots=True)
 class Root:
     """Root structure"""
 
-    classes: list[WmiClass]
+    objects: list[WmiObject]
 
     @classmethod
     def from_container(cls, container: Container) -> Root:
         """Parse root structure from container"""
         return cls(
-            classes=container["data"]["classes"]
+            objects=container["data"]["objects"]
         )
 
 
@@ -35,7 +35,7 @@ class RootAdapter(Adapter):
         """Encode Root class to container"""
         return Container(
             data=Container(
-                classes=obj.classes
+                objects=obj.objects
             )
         )
 
@@ -49,9 +49,9 @@ BMOF_ROOT: Final = RootAdapter(
             Struct(
                 "unknown1" / Const(1, Int32ul),
                 "unknown2" / Const(1, Int32ul),
-                "classes" / PrefixedArray(
+                "objects" / PrefixedArray(
                     Int32ul,
-                    BMOF_WMI_CLASS
+                    BMOF_WMI_OBJECT
                 )
             )
         )

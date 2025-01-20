@@ -1,0 +1,20 @@
+[WMI,
+ Dynamic,
+ Provider("WmiProv"),
+ Locale("MS\\0x409"),
+ Description("Simple class for testing"),
+ guid("{9A1D604D-8EBA-4080-8D92-F370446A933C}")
+]
+class TestClass
+{
+    [key, read] string InstanceName;
+    [read] boolean Active;
+
+    [Description("Test property")]
+    boolean TestProperty;
+};
+
+instance of SimpleClass
+{
+	TestProperty = true;
+};
