@@ -16,8 +16,20 @@ ARRAY_FLAG: Final = 0x2000
 class WmiDataType(IntEnum, boundary=STRICT):
     """WMI data types"""
     BOOLEAN = 11
+    UINT8 = 17
+    SINT8 = 16
+    UINT16 = 18
+    SINT16 = 2
+    UINT32 = 19
     SINT32 = 3
+    UINT64 = 21
+    SINT64 = 20
+    REAL32 = 4
+    REAL64 = 5
+    CHAR16 = 103
     STRING = 8
+    OBJECT = 13
+    DATETIME = 101
 
 
 @dataclass(frozen=True, slots=True)

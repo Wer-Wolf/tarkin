@@ -8,8 +8,8 @@ from enum import IntEnum, unique, STRICT
 from typing import Final
 from construct import Struct, Container, Adapter, Const, Int32ul, FixedSized, Prefixed, \
     PrefixedArray, Rebuild, len_, this
-from .wmi_class_data import BMOF_WMI_CLASS_DATA, WmiClassData
 from .wmi_method import BMOF_WMI_METHOD, WmiMethod
+from .wmi_property import BMOF_WMI_PROPERTY, WmiProperty
 from .wmi_qualifier import BMOF_WMI_QUALIFIER, WmiQualifier
 
 
@@ -28,7 +28,7 @@ class WmiObject:
 
     qualifiers: list[WmiQualifier]
 
-    data: WmiClassData
+    properties: list[WmiProperty]
 
     methods: list[WmiMethod]
 
@@ -38,7 +38,7 @@ class WmiObject:
         return cls(
             object_type=WmiObjectType(int(container["object_type"])),
             qualifiers=container["data"]["qualifiers"],
-            data=container["data"]["class_data"],
+            properties=container["data"]["properties"],
             methods=container["methods"]
         )
 
@@ -56,7 +56,7 @@ class WmiObjectAdapter(Adapter):
             object_type=int(obj.object_type),
             data=Container(
                 qualifiers=obj.qualifiers,
-                class_data=obj.data
+                properties=obj.properties
             ),
             methods=obj.methods
         )
@@ -84,7 +84,14 @@ BMOF_WMI_OBJECT: Final = WmiObjectAdapter(
                             includelength=True
                         )
                     ),
-                    "class_data" / BMOF_WMI_CLASS_DATA
+                    "properties" / Prefixed(
+                        Int32ul,
+                        PrefixedArray(
+                            Int32ul,
+                            BMOF_WMI_PROPERTY
+                        ),
+                        includelength=True
+                    )
                 )
             ),
             "methods" / Prefixed(
