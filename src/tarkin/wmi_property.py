@@ -6,7 +6,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Final, Optional
 from construct import Struct, Container, Adapter, Prefixed, Int32ul, Const, Rebuild, FixedSized, \
-    GreedyString, PrefixedArray, If, IfThenElse
+    GreedyString, If, IfThenElse
+from .constructs import BmofArray
 from .wmi_data import BMOF_WMI_DATA, NullStripAdapter
 from .wmi_qualifier import BMOF_WMI_QUALIFIER, WmiQualifier
 from .wmi_type import BMOF_WMI_TYPE, WmiType
@@ -133,13 +134,8 @@ BMOF_WMI_PROPERTY: Final = WmiPropertyAdapter(
             ),
             "qualifiers" / If(
                 lambda context: context.qualifiers_offset != 0xFFFFFFFF,
-                Prefixed(
-                    Int32ul,
-                    PrefixedArray(
-                        Int32ul,
-                        BMOF_WMI_QUALIFIER
-                    ),
-                    includelength=True
+                BmofArray(
+                    BMOF_WMI_QUALIFIER
                 )
             )
         ),

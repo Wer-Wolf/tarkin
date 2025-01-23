@@ -7,7 +7,8 @@ from dataclasses import dataclass
 from enum import IntEnum, unique, STRICT
 from typing import Final
 from construct import Struct, Container, Adapter, Const, Int32ul, FixedSized, Prefixed, \
-    PrefixedArray, Rebuild, len_, this
+    Rebuild, len_, this
+from .constructs import BmofArray
 from .wmi_method import BMOF_WMI_METHOD, WmiMethod
 from .wmi_property import BMOF_WMI_PROPERTY, WmiProperty
 from .wmi_qualifier import BMOF_WMI_QUALIFIER, WmiQualifier
@@ -75,32 +76,17 @@ BMOF_WMI_OBJECT: Final = WmiObjectAdapter(
                 Struct(
                     "qualifiers" / FixedSized(
                         lambda context: context._.qualifiers_length,
-                        Prefixed(
-                            Int32ul,
-                            PrefixedArray(
-                                Int32ul,
-                                BMOF_WMI_QUALIFIER
-                            ),
-                            includelength=True
+                        BmofArray(
+                            BMOF_WMI_QUALIFIER
                         )
                     ),
-                    "properties" / Prefixed(
-                        Int32ul,
-                        PrefixedArray(
-                            Int32ul,
-                            BMOF_WMI_PROPERTY
-                        ),
-                        includelength=True
+                    "properties" / BmofArray(
+                        BMOF_WMI_PROPERTY
                     )
                 )
             ),
-            "methods" / Prefixed(
-                Int32ul,
-                PrefixedArray(
-                    Int32ul,
-                    BMOF_WMI_METHOD
-                ),
-                includelength=True
+            "methods" / BmofArray(
+                BMOF_WMI_METHOD
             )
         ),
         includelength=True
