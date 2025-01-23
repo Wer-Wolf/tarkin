@@ -1,0 +1,37 @@
+[WMI,
+ Dynamic,
+ Provider("WmiProv"),
+ Locale("MS\\0x409"),
+ Description("Test class properties and methods"),
+ guid("{7F61DFFE-EED6-4087-BB73-C41C9A9B6EB9}")
+]
+class TestClass
+{
+    [key, read] string InstanceName;
+    [read] boolean Active;
+    
+    [Description("Test property")]
+    sint32 TestProperty;
+    
+    [Implemented, Description("Test method")]
+    string TestMethod(
+    	[in, id(0)] sint32 Test1,
+    	[in, out, id(1)] boolean Test2
+    );
+};
+
+[WMI,
+ Dynamic,
+ Provider("WmiProv"),
+ Locale("MS\\0x409"),
+ Description("Test class using inheritance"),
+ guid("{FBC56561-F0F0-4C12-9D8A-2AA3E5C6542C}")
+]
+class DerivedTestClass: TestClass
+{
+	[Description("New test property")]
+	string NewTestProperty;
+
+	[Implemented, Description("New test method")]
+	boolean NewTestMethod();
+};
