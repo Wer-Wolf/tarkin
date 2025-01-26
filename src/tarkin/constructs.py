@@ -3,7 +3,9 @@
 """Common BMOF constructs"""
 
 from __future__ import annotations
-from construct import Construct, Int32ul, Prefixed, PrefixedArray
+from typing import Callable
+from construct import Construct, Container, Int32ul, Prefixed, PrefixedArray, IfThenElse, \
+    Pointer, Pass
 
 
 class BmofArray(Prefixed):
@@ -17,4 +19,18 @@ class BmofArray(Prefixed):
                 subcon
             ),
             includelength=True
+        )
+
+
+class BmofHeapReference(IfThenElse):
+    # pylint: disable=abstract-method
+    """Optional pointer reference to a heap subconstruct"""
+    def __init__(self, offset: Callable[[Container], int], subcon: Construct) -> None:
+        super().__init__(
+            lambda context: offset(context) != 0xFFFFFFFF,  # subcon does exist
+            Pointer(
+                offset,
+                subcon
+            ),
+            Pass
         )

@@ -5,10 +5,9 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from typing import Final, Optional
-from construct import Struct, Container, Adapter, Prefixed, Int32ul, Const, Rebuild, FixedSized, \
-    GreedyString, If, IfThenElse
-from .constructs import BmofArray
-from .wmi_data import BMOF_WMI_DATA, NullStripAdapter
+from construct import Struct, Container, Adapter, Prefixed, Int32ul, Tell, CString
+from .constructs import BmofArray, BmofHeapReference
+from .wmi_data import BMOF_WMI_DATA
 from .wmi_qualifier import BMOF_WMI_QUALIFIER, WmiQualifier
 from .wmi_type import BMOF_WMI_TYPE, WmiType
 
@@ -19,7 +18,7 @@ class WmiProperty:
 
     data_type: WmiType
 
-    name: str
+    name: Optional[str]
 
     value: Optional[bool | int | str]
 
@@ -30,9 +29,9 @@ class WmiProperty:
         """Parse WMI property from container"""
         return cls(
             data_type=container["data_type"],
-            name=container["name"],
-            value=container["value"],
-            qualifiers=container["qualifiers"]
+            name=container["heap"]["name"],
+            value=container["heap"]["value"],
+            qualifiers=container["heap"]["qualifiers"]
         )
 
 
@@ -45,50 +44,7 @@ class WmiPropertyAdapter(Adapter):
 
     def _encode(self, obj: WmiProperty, context: Container, path: str) -> Container:
         """Encode WMI property to container"""
-        return Container(
-            data_type=obj.data_type,
-            name=obj.name,
-            value=obj.value,
-            qualifier=obj.qualifiers
-        )
-
-
-def get_value_offset(container: Container) -> int:
-    """Returns the offset of the property value or a placeholder value"""
-    if container["value"] is None:
-        return 0xFFFFFFFF
-
-    return len(container["name"])
-
-
-def get_qualifiers_offset(container: Container) -> int:
-    """Returns the offset of the property qualifiers or a placeholder value"""
-    if container["qualifiers"] is None:
-        return 0xFFFFFFFF
-
-    if container["value"] is None:
-        return len(container["name"])
-
-    return len(container["name"]) + len(container["value"])
-
-
-def has_name_length_limit(container: Container) -> bool:
-    """Determines is the property name string has a length limit"""
-    if container["value_offset"] != 0xFFFFFFFF:
-        return True
-
-    if container["qualifiers_offset"] != 0xFFFFFFFF:
-        return True
-
-    return False
-
-
-def get_name_length_limit(container: Container) -> int:
-    """Returns the length limit of the property name string"""
-    if container["value_offset"] != 0xFFFFFFFF:
-        return container["value_offset"]
-
-    return container["qualifiers_offset"]
+        raise NotImplementedError("Property encoding is not yet implemented")
 
 
 BMOF_WMI_PROPERTY: Final = WmiPropertyAdapter(
@@ -96,46 +52,26 @@ BMOF_WMI_PROPERTY: Final = WmiPropertyAdapter(
         Int32ul,
         Struct(
             "data_type" / BMOF_WMI_TYPE,
-            "unknown" / Const(0, Int32ul),
-            "value_offset" / Rebuild(
-                Int32ul,
-                get_value_offset
-            ),
-            "qualifiers_offset" / Rebuild(
-                Int32ul,
-                get_qualifiers_offset
-            ),
-            "name" / IfThenElse(
-                has_name_length_limit,
-                FixedSized(
-                    get_name_length_limit,
-                    NullStripAdapter(
-                        GreedyString("utf-16-le")
+            "name_offset" / Int32ul,
+            "value_offset" / Int32ul,
+            "qualifiers_offset" / Int32ul,
+            "heap" / Struct(
+                "offset" / Tell,
+                "name" / BmofHeapReference(
+                    lambda context: min(context._.name_offset + context.offset, 0xFFFFFFFF),
+                    CString("utf_16_le")
+                ),
+                "value" / BmofHeapReference(
+                    lambda context: min(context._.value_offset + context.offset, 0xFFFFFFFF),
+                    BMOF_WMI_DATA(
+                        lambda context: context._.data_type
                     )
                 ),
-                NullStripAdapter(
-                    GreedyString("utf-16-le")
-                )
-            ),
-            "value" / If(
-                lambda context: context.value_offset != 0xFFFFFFFF,
-                IfThenElse(
-                    lambda context: context.qualifiers_offset != 0xFFFFFFFF,
-                    FixedSized(
-                        lambda context: context.qualifiers_offset - context.value_offset,
-                        BMOF_WMI_DATA(
-                            lambda context: context.data_type
-                        )
-                    ),
-                    BMOF_WMI_DATA(
-                        lambda context: context.data_type
+                "qualifiers" / BmofHeapReference(
+                    lambda context: min(context._.qualifiers_offset + context.offset, 0xFFFFFFFF),
+                    BmofArray(
+                        BMOF_WMI_QUALIFIER
                     )
-                )
-            ),
-            "qualifiers" / If(
-                lambda context: context.qualifiers_offset != 0xFFFFFFFF,
-                BmofArray(
-                    BMOF_WMI_QUALIFIER
                 )
             )
         ),
