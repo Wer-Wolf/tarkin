@@ -6,10 +6,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Final, Optional
 from construct import Struct, Container, Adapter, Prefixed, Int32ul, Const, Rebuild, FixedSized, \
-    GreedyString, If, IfThenElse, GreedyBytes
+    If, IfThenElse, GreedyBytes, CString
 from .constructs import BmofArray
 from .wmi_qualifier import BMOF_WMI_QUALIFIER, WmiQualifier
-from .wmi_data import NullStripAdapter
 
 
 @dataclass(frozen=True, slots=True)
@@ -104,13 +103,9 @@ BMOF_WMI_METHOD: Final = WmiMethodAdapter(
                 has_name_length_limit,
                 FixedSized(
                     get_name_length_limit,
-                    NullStripAdapter(
-                        GreedyString("utf-16-le")
-                    )
+                    CString("utf_16_le")
                 ),
-                NullStripAdapter(
-                    GreedyString("utf-16-le")
-                )
+                CString("utf_16_le")
             ),
             "parameters" / If(
                 lambda context: context.parameters_offset != 0xFFFFFFFF,
