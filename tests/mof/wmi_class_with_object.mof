@@ -1,0 +1,37 @@
+[WMI,
+ Dynamic,
+ Provider("WmiProv"),
+ Locale("MS\\0x409"),
+ Description("Test class with an embedded object"),
+ guid("{107FC8F1-8524-4739-A717-BCF997D6CF7F}")
+]
+class TestClass
+{
+    [key, read] string InstanceName;
+    [read] boolean Active;
+
+    [Description("Embedded object")]
+    object EmbeddedObject;
+};
+
+[WMI,
+ Dynamic,
+ Provider("WmiProv"),
+ Locale("MS\\0x409"),
+ Description("Test class with an embedded object"),
+ guid("{E4DC9AA3-C7E2-4415-A58F-8F7ABE195744}")
+]
+class EmbeddedClass
+{
+	[key, read] string InstanceName;
+};
+
+instance of TestClass
+{
+	InstanceName = "Test";
+	Active = True;
+	EmbeddedObject = instance of EmbeddedClass
+		{
+			InstanceName = "Embedded";
+		};
+};
