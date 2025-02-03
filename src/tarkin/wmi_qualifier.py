@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from typing import Final, Optional
 from construct import Struct, Container, Adapter, Int32ul, Tell, Prefixed, CString
 from .constructs import BmofHeapReference
-from .wmi_data import BmofWmiData
+from .wmi_data import BmofWmiData, WmiData
 from .wmi_type import BMOF_WMI_TYPE, WmiType
 
 
@@ -19,7 +19,7 @@ class WmiQualifier:
 
     name: Optional[str]
 
-    value: Optional[bool | int | str | bytes]
+    value: Optional[WmiData]
 
     offset: int
 

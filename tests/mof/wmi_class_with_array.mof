@@ -1,0 +1,4 @@
+class Test
+{
+	uint32 values[] = {0xdead, 0xbeef};
+};
