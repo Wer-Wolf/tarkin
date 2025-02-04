@@ -5,9 +5,10 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from enum import IntEnum, unique, STRICT
-from typing import Final, Optional
+from typing import Final, Optional, Iterable
 from construct import Struct, Container, Adapter, Int32ul, Prefixed, Tell
 from .constructs import BmofArray, BmofHeapReference
+from .wmi_type import WmiDataType
 from .wmi_method import BMOF_WMI_METHOD, WmiMethod
 from .wmi_property import BMOF_WMI_PROPERTY, WmiProperty
 from .wmi_qualifier import BMOF_WMI_QUALIFIER, WmiQualifier
@@ -41,6 +42,87 @@ class WmiObject:
             properties=container["heap"]["properties"],
             methods=container["heap"]["methods"]
         )
+
+    @property
+    def name(self) -> Optional[str]:
+        """Retrieve the class name"""
+        if self.properties is None:
+            return None
+
+        for prop in self.properties:
+            if prop.name != "__CLASS":
+                continue
+
+            if prop.data_type != WmiDataType.STRING:
+                continue
+
+            return prop.value
+
+        return None
+
+    @property
+    def namespace(self) -> Optional[str]:
+        """Retrieve the class namespace"""
+        if self.properties is None:
+            return None
+
+        for prop in self.properties:
+            if prop.name != "__NAMESPACE":
+                continue
+
+            if prop.data_type != WmiDataType.STRING:
+                continue
+
+            return prop.value
+
+        return None
+
+    @property
+    def superclass(self) -> Optional[str]:
+        """Retrieve the class superclass"""
+        if self.properties is None:
+            return None
+
+        for prop in self.properties:
+            if prop.name != "__SUPERCLASS":
+                continue
+
+            if prop.data_type != WmiDataType.STRING:
+                continue
+
+            return prop.value
+
+        return None
+
+    @property
+    def flags(self) -> Optional[int]:
+        """Retrieve the class flags"""
+        if self.properties is None:
+            return None
+
+        for prop in self.properties:
+            if prop.name != "__CLASSFLAGS":
+                continue
+
+            if prop.data_type != WmiDataType.SINT32:
+                continue
+
+            return prop.value
+
+        return None
+
+    @property
+    def variables(self) -> Iterable[WmiProperty]:
+        """Retrieve the class variables"""
+        if self.properties is None:
+            return
+
+        for prop in self.properties:
+            match prop.name:
+                case "__CLASS" | "__NAMESPACE" | "__SUPERCLASS" | "__CLASSFLAGS":
+                    continue
+                case _:
+                    yield prop
 
 
 class WmiObjectAdapter(Adapter):
