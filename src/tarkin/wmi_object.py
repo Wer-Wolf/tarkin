@@ -9,7 +9,7 @@ from typing import Final, Optional, Iterable
 from construct import Struct, Container, Adapter, Int32ul, Prefixed, Tell
 from .constructs import BmofArray, BmofHeapReference
 from .wmi_type import WmiDataType
-from .wmi_method import BMOF_WMI_METHOD, WmiMethod
+from .wmi_method import WmiMethod
 from .wmi_property import BMOF_WMI_PROPERTY, WmiProperty
 from .wmi_qualifier import BMOF_WMI_QUALIFIER, WmiQualifier
 
@@ -19,6 +19,44 @@ class WmiObjectType(IntEnum, boundary=STRICT):
     """WMI object types"""
     CLASS = 0
     INSTANCE = 1
+
+
+def validate_parameter_object(obj: WmiObject):
+    """Validate that a given object is a parameter object"""
+    if obj.object_type != WmiObjectType.INSTANCE:
+        raise RuntimeError("Parameter object is not an instance")
+
+    if obj.name != "__PARAMETERS":
+        raise RuntimeError(f"Parameter object has unknown name: {obj.name}")
+
+    if obj.qualifiers is not None:
+        if len(obj.qualifiers) != 0:
+            raise RuntimeError("Parameter object contains qualifiers")
+
+    if obj.methods is not None:
+        if len(obj.methods) != 0:
+            raise RuntimeError("Parameter object contains methods")
+
+
+def parse_method(prop: WmiProperty) -> WmiMethod:
+    """Parse a WMI method from a special WMI property"""
+    if prop.data_type.basic_type != WmiDataType.OBJECT:
+        raise RuntimeError("Method property does not contain objects")
+
+    if not prop.data_type.is_array:
+        raise RuntimeError("Method property does not contain multiple objects")
+
+    if len(prop.value) != 2:
+        raise RuntimeError(f"Method property contains a invalid number of objects: {prop.value}")
+
+    input_params: WmiObject = BMOF_WMI_OBJECT.parse(prop.value[0])
+    validate_parameter_object(input_params)
+
+    output_params: WmiObject = BMOF_WMI_OBJECT.parse(prop.value[1])
+    validate_parameter_object(output_params)
+
+    return WmiMethod.from_properties(prop.name, input_params.variables, output_params.variables,
+                                     prop.qualifiers)
 
 
 @dataclass(frozen=True, slots=True)
@@ -36,11 +74,19 @@ class WmiObject:
     @classmethod
     def from_container(cls, container: Container) -> WmiObject:
         """Parse WMI object from container"""
+
+        methods: Optional[list] = None
+
+        if container["heap"]["methods"] is not None:
+            methods = []
+            for method in container["heap"]["methods"]:
+                methods.append(parse_method(method))
+
         return cls(
             object_type=WmiObjectType(int(container["object_type"])),
             qualifiers=container["heap"]["qualifiers"],
             properties=container["heap"]["properties"],
-            methods=container["heap"]["methods"]
+            methods=methods
         )
 
     @property
@@ -162,7 +208,7 @@ BMOF_WMI_OBJECT: Final = WmiObjectAdapter(
                 "methods" / BmofHeapReference(
                     lambda context: min(context._.methods_offset + context.offset, 0xFFFFFFFF),
                     BmofArray(
-                        BMOF_WMI_METHOD
+                        BMOF_WMI_PROPERTY
                     )
                 )
             )

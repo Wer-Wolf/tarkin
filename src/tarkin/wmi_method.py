@@ -4,11 +4,10 @@
 
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import Final, Optional
-from construct import Struct, Container, Adapter, Prefixed, Int32ul, Const, Rebuild, FixedSized, \
-    If, IfThenElse, GreedyBytes, CString
-from .constructs import BmofArray
-from .wmi_qualifier import BMOF_WMI_QUALIFIER, WmiQualifier
+from typing import Optional
+from .wmi_property import WmiProperty
+from .wmi_qualifier import WmiQualifier
+from .wmi_type import WmiType
 
 
 @dataclass(frozen=True, slots=True)
@@ -17,114 +16,49 @@ class WmiMethod:
 
     name: str
 
-    parameters: Optional[bytes]
+    parameters: Optional[list[WmiProperty]]
 
     qualifiers: Optional[list[WmiQualifier]]
 
+    return_type: Optional[WmiType]
+
     @classmethod
-    def from_container(cls, container: Container) -> WmiMethod:
-        """Parse WMI method from container"""
+    def from_properties(cls, name: str, input_params: list[WmiProperty],
+                        output_params: list[WmiProperty], qualifiers: list[WmiQualifier]):
+        """Create WMI method with input and output parameters"""
+        params = {}
+        return_type: Optional[WmiType] = None
+
+        for prop in input_params:
+            params[prop.name] = prop
+
+        for prop in output_params:
+            if prop.name == "ReturnValue":
+                return_type = prop.data_type
+            elif prop.name in params:
+                param = params[prop.name]
+
+                if param.data_type != prop.data_type:
+                    raise RuntimeError(f"Parameter {param.name} contains different data types")
+
+                if param.value != prop.value:
+                    raise RuntimeError(f"Parameter {param.name} contains different values")
+
+                if prop.qualifiers is None:
+                    continue
+
+                if param.qualifiers is None:
+                    param.qualifiers = []
+
+                for qualifier in prop.qualifiers:
+                    if qualifier.name not in map(lambda p: p.name, param.qualifiers):
+                        param.qualifiers.append(qualifier)
+            else:
+                params[prop.name] = prop
+
         return cls(
-            name=container["name"],
-            parameters=container["parameters"],
-            qualifiers=container["qualifiers"]
+            name=name,
+            parameters=params.values(),
+            qualifiers=qualifiers,
+            return_type=return_type
         )
-
-
-class WmiMethodAdapter(Adapter):
-    # pylint: disable=abstract-method
-    """Adapter for converting an container into a WMI method"""
-    def _decode(self, obj: Container, context: Container, path: str) -> WmiMethod:
-        """Decode container to a WMI method"""
-        return WmiMethod.from_container(obj)
-
-    def _encode(self, obj: WmiMethod, context: Container, path: str) -> Container:
-        """Encode WMI method to container"""
-        return Container(
-            name=obj.name,
-            parameters=obj.parameters,
-            qualifiers=obj.qualifiers
-        )
-
-
-def get_parameters_offset(container: Container) -> int:
-    """Returns the offset of the method parameters or a placeholder value"""
-    if container["parameters"] is None:
-        return 0xFFFFFFFF
-
-    return len(container["name"])
-
-
-def get_qualifiers_offset(container: Container) -> int:
-    """Returns the offset of the method qualifiers or a placeholder value"""
-    if container["qualifiers"] is None:
-        return 0xFFFFFFFF
-
-    if container["parameters"] is None:
-        return len(container["name"])
-
-    return len(container["name"]) + len(container["parameters"])
-
-
-def has_name_length_limit(container: Container) -> bool:
-    """Determines is the method name string has a length limit"""
-    if container["parameters_offset"] != 0xFFFFFFFF:
-        return True
-
-    if container["qualifiers_offset"] != 0xFFFFFFFF:
-        return True
-
-    return False
-
-
-def get_name_length_limit(container: Container) -> int:
-    """Returns the length limit of the method name string"""
-    if container["parameters_offset"] != 0xFFFFFFFF:
-        return container["parameters_offset"]
-
-    return container["qualifiers_offset"]
-
-
-BMOF_WMI_METHOD: Final = WmiMethodAdapter(
-    Prefixed(
-        Int32ul,
-        Struct(
-            "method_type" / Const(0x200D, Int32ul),     # TODO Can also be 0x0
-            "unknown" / Const(0, Int32ul),
-            "parameters_offset" / Rebuild(
-                Int32ul,
-                get_parameters_offset
-            ),
-            "qualifiers_offset" / Rebuild(
-                Int32ul,
-                get_qualifiers_offset
-            ),
-            "name" / IfThenElse(
-                has_name_length_limit,
-                FixedSized(
-                    get_name_length_limit,
-                    CString("utf_16_le")
-                ),
-                CString("utf_16_le")
-            ),
-            "parameters" / If(
-                lambda context: context.parameters_offset != 0xFFFFFFFF,
-                IfThenElse(
-                    lambda context: context.qualifiers_offset != 0xFFFFFFFF,
-                    FixedSized(
-                        lambda context: context.qualifiers_offset - context.parameters_offset,
-                        GreedyBytes
-                    ),
-                    GreedyBytes
-                )
-            ),
-            "qualifiers" / If(
-                lambda context: context.qualifiers_offset != 0xFFFFFFFF,
-                BmofArray(
-                    BMOF_WMI_QUALIFIER
-                )
-            )
-        ),
-        includelength=True
-    )
-)

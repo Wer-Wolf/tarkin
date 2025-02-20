@@ -6,7 +6,7 @@
 from __future__ import annotations
 from typing import Callable, TypeAlias
 from construct import Switch, Mapping, Int32sl, Int32ul, Error, CString, RawCopy, Prefixed, \
-    GreedyBytes, Container, ExprAdapter, IfThenElse, FocusedSeq, Const, Array, Rebuild
+    GreedyBytes, Container, ExprAdapter, IfThenElse, FocusedSeq, Const, Array, Rebuild, Int16ul
 from .wmi_type import WmiDataType, WmiType
 
 
@@ -20,7 +20,7 @@ class BmofWmiSingleData(Switch):
         super().__init__(
             lambda context: data_type(context).basic_type,
             {
-                WmiDataType.BOOLEAN: Mapping(Int32ul, {False: 0x0, True: 0xffff}),
+                WmiDataType.BOOLEAN: Mapping(Int16ul, {False: 0x0, True: 0xffff}),
                 WmiDataType.UINT32: Int32ul,
                 WmiDataType.SINT32: Int32sl,
                 WmiDataType.STRING: CString("utf_16_le"),
