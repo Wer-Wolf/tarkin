@@ -5,8 +5,9 @@
 
 from __future__ import annotations
 from typing import Callable, TypeAlias
-from construct import Switch, Mapping, Int32sl, Int32ul, Error, CString, RawCopy, Prefixed, \
-    GreedyBytes, Container, ExprAdapter, IfThenElse, FocusedSeq, Const, Array, Rebuild, Int16ul
+from construct import Switch, Mapping, Int8ul, Int8sl, Int16ul, Int16sl, Int32sl, Int32ul, \
+    Int64ul, Int64sl, Float32l, Float64l, Error, CString, RawCopy, Prefixed, GreedyBytes, \
+    Container, ExprAdapter, IfThenElse, FocusedSeq, Const, Array, Rebuild
 from .wmi_type import WmiDataType, WmiType
 
 
@@ -21,8 +22,16 @@ class BmofWmiSingleData(Switch):
             lambda context: data_type(context).basic_type,
             {
                 WmiDataType.BOOLEAN: Mapping(Int16ul, {False: 0x0, True: 0xffff}),
+                WmiDataType.UINT8: Int8ul,
+                WmiDataType.SINT8: Int8sl,
+                WmiDataType.UINT16: Int16ul,
+                WmiDataType.SINT16: Int16sl,
                 WmiDataType.UINT32: Int32ul,
                 WmiDataType.SINT32: Int32sl,
+                WmiDataType.UINT64: Int64ul,
+                WmiDataType.SINT64: Int64sl,
+                WmiDataType.REAL32: Float32l,
+                WmiDataType.REAL64: Float64l,
                 WmiDataType.STRING: CString("utf_16_le"),
                 # We cannot directly use BMOF_WMI_OBJECT here due to cyclical imports :(
                 WmiDataType.OBJECT: ExprAdapter(

@@ -1,0 +1,37 @@
+class DataTypes
+{
+    uint8 Uint8;
+    sint8 Sint8;
+    uint16 Uint16;
+    sint16 Sint16;
+    uint32 Uint32;
+    sint32 Sint32;
+    uint64 Uint64;
+    sint64 Sint64;
+    string String;
+    boolean Boolean;
+    real32 Real32;
+    real64 Real64;
+    datetime Datetime;
+    object ref Reference;
+    char16 Char16;
+};
+
+instance of DataTypes
+{
+    Uint8 = 64;
+    Sint8 = -64;
+    Uint16 = 128;
+    Sint16 = -128;
+    Uint32 = 256;
+    Sint32 = -256;
+    int64 = 512;
+    Sint64 = -512;
+    String = "Test";
+    Boolean = true;
+    Real32 = 0.5;
+    Real64 = 0.5;
+    Datetime = "00000001120032.000000:000";
+    Reference = "Non-existing key";
+    Char16 = '\x00E4';	// Ä
+};
