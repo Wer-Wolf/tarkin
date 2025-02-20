@@ -30,6 +30,7 @@ class WmiDataType(IntEnum, boundary=STRICT):
     STRING = 8
     OBJECT = 13
     DATETIME = 101
+    REFERENCE = 102
 
 
 @dataclass(frozen=True, slots=True)

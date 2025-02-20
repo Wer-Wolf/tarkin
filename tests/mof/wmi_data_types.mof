@@ -1,0 +1,18 @@
+class DataTypes
+{
+    uint8 Uint8;
+    sint8 Sint8;
+    uint16 Uint16;
+    sint16 Sint16;
+    uint32 Uint32;
+    sint32 Sint32;
+    uint64 Uint64;
+    sint64 Sint64;
+    string String;
+    boolean Boolean;
+    real32 Real32;
+    real64 Real64;
+    datetime Datetime;
+    object ref Reference;
+    char16 Char16;
+};
