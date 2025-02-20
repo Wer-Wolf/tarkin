@@ -1,0 +1,5 @@
+[abstract]
+class PARAMETERS
+{
+	[in, ID(0)] string Parameter;
+};
