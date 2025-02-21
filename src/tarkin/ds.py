@@ -34,7 +34,7 @@ class CompressedDS(Tunnel):
 
         input_data = (c_ubyte * len(data)).from_buffer_copy(data)
         output_data = (c_ubyte * length).from_buffer(buffer)
-        result_length = c_size_t()
+        result_length = c_size_t(0)
 
         ret: int = LIB.ds_decompress(
             input_data,

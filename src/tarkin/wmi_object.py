@@ -49,10 +49,10 @@ def parse_method(prop: WmiProperty) -> WmiMethod:
     if len(prop.value) != 2:
         raise RuntimeError(f"Method property contains a invalid number of objects: {prop.value}")
 
-    input_params: WmiObject = BMOF_WMI_OBJECT.parse(prop.value[0])
+    input_params: WmiObject = prop.value[0]
     validate_parameter_object(input_params)
 
-    output_params: WmiObject = BMOF_WMI_OBJECT.parse(prop.value[1])
+    output_params: WmiObject = prop.value[1]
     validate_parameter_object(output_params)
 
     return WmiMethod.from_properties(prop.name, input_params.variables, output_params.variables,

@@ -4,14 +4,24 @@
 
 
 from __future__ import annotations
-from typing import Callable, TypeAlias
+from typing import Callable
 from construct import Switch, Mapping, Int8ul, Int8sl, Int16ul, Int16sl, Int32sl, Int32ul, \
-    Int64ul, Int64sl, Float32l, Float64l, Error, CString, RawCopy, Prefixed, GreedyBytes, \
-    Container, ExprAdapter, IfThenElse, FocusedSeq, Const, Array, Rebuild
+    Int64ul, Int64sl, Float32l, Float64l, Error, CString, Prefixed, Container, IfThenElse, \
+    FocusedSeq, Const, Array, Rebuild, LazyBound
+from tarkin import wmi_object
 from .wmi_type import WmiDataType, WmiType
 
 
-WmiData: TypeAlias = bool | int | str | bytes | list[bool] | list[int] | list[str] | list[bytes]
+type WmiData = bool \
+    | int \
+    | float \
+    | str \
+    | wmi_object.WmiObject \
+    | list[bool] \
+    | list[int] \
+    | list[float] \
+    | list[str] \
+    | list[wmi_object.WmiObject]
 
 
 class BmofWmiSingleData(Switch):
@@ -33,18 +43,9 @@ class BmofWmiSingleData(Switch):
                 WmiDataType.REAL32: Float32l,
                 WmiDataType.REAL64: Float64l,
                 WmiDataType.STRING: CString("utf_16_le"),
-                # We cannot directly use BMOF_WMI_OBJECT here due to cyclical imports :(
-                WmiDataType.OBJECT: ExprAdapter(
-                    RawCopy(
-                        Prefixed(
-                            Int32ul,
-                            GreedyBytes,
-                            includelength=True
-                        )
-                    ),
-                    lambda obj, context: obj["data"],
-                    lambda obj, context: obj
-                )
+                # LazyBound is necessary because WMI data items are usually
+                # already contained inside an object.
+                WmiDataType.OBJECT: LazyBound(lambda: wmi_object.BMOF_WMI_OBJECT),
             },
             default=Error
         )
