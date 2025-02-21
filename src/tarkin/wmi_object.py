@@ -21,44 +21,6 @@ class WmiObjectType(IntEnum, boundary=STRICT):
     INSTANCE = 1
 
 
-def validate_parameter_object(obj: WmiObject):
-    """Validate that a given object is a parameter object"""
-    if obj.object_type != WmiObjectType.INSTANCE:
-        raise RuntimeError("Parameter object is not an instance")
-
-    if obj.name != "__PARAMETERS":
-        raise RuntimeError(f"Parameter object has unknown name: {obj.name}")
-
-    if obj.qualifiers is not None:
-        if len(obj.qualifiers) != 0:
-            raise RuntimeError("Parameter object contains qualifiers")
-
-    if obj.methods is not None:
-        if len(obj.methods) != 0:
-            raise RuntimeError("Parameter object contains methods")
-
-
-def parse_method(prop: WmiProperty) -> WmiMethod:
-    """Parse a WMI method from a special WMI property"""
-    if prop.data_type.basic_type != WmiDataType.OBJECT:
-        raise RuntimeError("Method property does not contain objects")
-
-    if not prop.data_type.is_array:
-        raise RuntimeError("Method property does not contain multiple objects")
-
-    if len(prop.value) != 2:
-        raise RuntimeError(f"Method property contains a invalid number of objects: {prop.value}")
-
-    input_params: WmiObject = prop.value[0]
-    validate_parameter_object(input_params)
-
-    output_params: WmiObject = prop.value[1]
-    validate_parameter_object(output_params)
-
-    return WmiMethod.from_properties(prop.name, input_params.variables, output_params.variables,
-                                     prop.qualifiers)
-
-
 @dataclass(frozen=True, slots=True)
 class WmiObject:
     """WMI object"""
@@ -74,19 +36,11 @@ class WmiObject:
     @classmethod
     def from_container(cls, container: Container) -> WmiObject:
         """Parse WMI object from container"""
-
-        methods: Optional[list] = None
-
-        if container["heap"]["methods"] is not None:
-            methods = []
-            for method in container["heap"]["methods"]:
-                methods.append(parse_method(method))
-
         return cls(
             object_type=WmiObjectType(int(container["object_type"])),
             qualifiers=container["heap"]["qualifiers"],
             properties=container["heap"]["properties"],
-            methods=methods
+            methods=container["heap"]["methods"]
         )
 
     @property
@@ -183,6 +137,43 @@ class WmiObjectAdapter(Adapter):
         raise NotImplementedError("Object encoding is not yet implemented")
 
 
+class WmiMethodAdapter(Adapter):
+    # pylint: disable=abstract-method
+    """Adapter for converting an WMI property into a WMI method"""
+    def _decode(self, obj: WmiProperty, context: Container, path: str) -> WmiMethod:
+        """Decode container to WMI object"""
+        if obj.data_type.basic_type != WmiDataType.OBJECT:
+            raise RuntimeError("Method property does not contain objects")
+
+        if not obj.data_type.is_array:
+            raise RuntimeError("Method property does not contain multiple objects")
+
+        if len(obj.value) != 2:
+            raise RuntimeError(f"Method property contains a invalid number of objects: {obj.value}")
+
+        for param_obj in obj.value:
+            if param_obj.object_type != WmiObjectType.INSTANCE:
+                raise RuntimeError("Parameter object is not an instance")
+
+            if param_obj.name != "__PARAMETERS":
+                raise RuntimeError(f"Parameter object has unknown name: {param_obj.name}")
+
+            if param_obj.qualifiers is not None:
+                if len(param_obj.qualifiers) != 0:
+                    raise RuntimeError("Parameter object contains qualifiers")
+
+            if param_obj.methods is not None:
+                if len(param_obj.methods) != 0:
+                    raise RuntimeError("Parameter object contains methods")
+
+        return WmiMethod.from_properties(obj.name, obj.value[0].variables, obj.value[1].variables,
+                                         obj.qualifiers)
+
+    def _encode(self, obj: WmiMethod, context: Container, path: str) -> Container:
+        """Encode WMI method to a WMI property"""
+        raise NotImplementedError("Method encoding is not yet implemented")
+
+
 BMOF_WMI_OBJECT: Final = WmiObjectAdapter(
     Prefixed(
         Int32ul,
@@ -208,7 +199,9 @@ BMOF_WMI_OBJECT: Final = WmiObjectAdapter(
                 "methods" / BmofHeapReference(
                     lambda context: min(context._.methods_offset + context.offset, 0xFFFFFFFF),
                     BmofArray(
-                        BMOF_WMI_PROPERTY
+                        WmiMethodAdapter(
+                            BMOF_WMI_PROPERTY
+                        )
                     )
                 )
             )
