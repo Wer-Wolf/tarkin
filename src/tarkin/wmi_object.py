@@ -5,6 +5,7 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from enum import IntEnum, unique, STRICT
+from itertools import chain
 from typing import Final, Optional, Iterable
 from construct import Struct, Container, Adapter, Int32ul, Prefixed, Tell
 from .constructs import BmofArray, BmofHeapReference
@@ -142,14 +143,15 @@ class WmiMethodAdapter(Adapter):
     """Adapter for converting an WMI property into a WMI method"""
     def _decode(self, obj: WmiProperty, context: Container, path: str) -> WmiMethod:
         """Decode container to WMI object"""
+        if obj.data_type == WmiDataType.VOID:
+            # void method with no arguments
+            return WmiMethod.from_properties(obj.name, [], obj.qualifiers)
+
         if obj.data_type.basic_type != WmiDataType.OBJECT:
             raise RuntimeError("Method property does not contain objects")
 
         if not obj.data_type.is_array:
-            raise RuntimeError("Method property does not contain multiple objects")
-
-        if len(obj.value) != 2:
-            raise RuntimeError(f"Method property contains a invalid number of objects: {obj.value}")
+            raise RuntimeError("Method property is not an array")
 
         for param_obj in obj.value:
             if param_obj.object_type != WmiObjectType.INSTANCE:
@@ -166,8 +168,10 @@ class WmiMethodAdapter(Adapter):
                 if len(param_obj.methods) != 0:
                     raise RuntimeError("Parameter object contains methods")
 
-        return WmiMethod.from_properties(obj.name, obj.value[0].variables, obj.value[1].variables,
-                                         obj.qualifiers)
+        # The method property can contain up to two objects for input and output parameters
+        params = chain.from_iterable(map(lambda o: o.variables, obj.value))
+
+        return WmiMethod.from_properties(obj.name, params, obj.qualifiers)
 
     def _encode(self, obj: WmiMethod, context: Container, path: str) -> Container:
         """Encode WMI method to a WMI property"""

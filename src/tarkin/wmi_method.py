@@ -4,10 +4,10 @@
 
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, Iterable
 from .wmi_property import WmiProperty
 from .wmi_qualifier import WmiQualifier
-from .wmi_type import WmiType
+from .wmi_type import WmiType, WmiDataType
 
 
 @dataclass(frozen=True, slots=True)
@@ -20,45 +20,42 @@ class WmiMethod:
 
     qualifiers: Optional[list[WmiQualifier]]
 
-    return_type: Optional[WmiType]
+    return_type: WmiType
 
     @classmethod
-    def from_properties(cls, name: str, input_params: list[WmiProperty],
-                        output_params: list[WmiProperty], qualifiers: list[WmiQualifier]):
-        """Create WMI method with input and output parameters"""
-        params = {}
-        return_type: Optional[WmiType] = None
+    def from_properties(cls, name: str, params: Iterable[WmiProperty],
+                        qualifiers: list[WmiQualifier]):
+        """Create WMI method from a list of possibly duplicated parameters"""
+        return_type = WmiType.from_data_type(WmiDataType.VOID)
+        final_params = {}
 
-        for prop in input_params:
-            params[prop.name] = prop
+        for param in params:
+            if param.name == "ReturnValue":
+                return_type = param.data_type
+            elif param.name in final_params:
+                final_param = final_params[param.name]
 
-        for prop in output_params:
-            if prop.name == "ReturnValue":
-                return_type = prop.data_type
-            elif prop.name in params:
-                param = params[prop.name]
-
-                if param.data_type != prop.data_type:
+                if final_param.data_type != param.data_type:
                     raise RuntimeError(f"Parameter {param.name} contains different data types")
 
-                if param.value != prop.value:
+                if final_param.value != param.value:
                     raise RuntimeError(f"Parameter {param.name} contains different values")
 
-                if prop.qualifiers is None:
+                if param.qualifiers is None:
                     continue
 
-                if param.qualifiers is None:
-                    param.qualifiers = []
+                if final_param.qualifiers is None:
+                    final_param.qualifiers = []
 
-                for qualifier in prop.qualifiers:
-                    if qualifier.name not in map(lambda p: p.name, param.qualifiers):
-                        param.qualifiers.append(qualifier)
+                for qualifier in param.qualifiers:
+                    if qualifier.name not in map(lambda p: p.name, final_param.qualifiers):
+                        final_param.qualifiers.append(qualifier)
             else:
-                params[prop.name] = prop
+                final_params[param.name] = param
 
         return cls(
             name=name,
-            parameters=params.values(),
+            parameters=final_params.values(),
             qualifiers=qualifiers,
             return_type=return_type
         )

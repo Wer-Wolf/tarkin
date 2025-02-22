@@ -31,6 +31,7 @@ class WmiDataType(IntEnum, boundary=STRICT):
     OBJECT = 13
     DATETIME = 101
     REFERENCE = 102
+    VOID = 0
 
 
 @dataclass(frozen=True, slots=True)
@@ -40,6 +41,14 @@ class WmiType:
     basic_type: WmiDataType
 
     is_array: bool
+
+    @classmethod
+    def from_data_type(cls, data_type: WmiDataType):
+        """Create WMI type from a simple WMI data type"""
+        return cls(
+            basic_type=data_type,
+            is_array=False
+        )
 
     @classmethod
     def from_int(cls, value: int) -> WmiType:
