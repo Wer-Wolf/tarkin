@@ -1,0 +1,11 @@
+#pragma namespace ("\\\\.\\root\\TEST1")
+
+class Class1
+{
+};
+
+#pragma namespace ("\\\\.\\root\\TEST2")
+
+class Class2
+{
+};

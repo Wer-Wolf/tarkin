@@ -1,0 +1,6 @@
+#pragma amendment ("MS_409")
+
+[Description("Localized version of Class1 for American English") : Amended, Locale(0x409)] 
+class Class1
+{
+};

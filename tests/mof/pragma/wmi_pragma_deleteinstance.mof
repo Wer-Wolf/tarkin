@@ -1,0 +1,7 @@
+#pragma deleteinstance("InstanceId1", fail)
+
+#pragma deleteinstance("InstanceId2", nofail)
+
+class Class1
+{
+};

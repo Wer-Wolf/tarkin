@@ -1,0 +1,7 @@
+#pragma deleteclass("Class2", fail)
+
+#pragma deleteclass("Class3", nofail)
+
+class Class1
+{
+};
