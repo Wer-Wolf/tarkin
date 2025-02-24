@@ -31,6 +31,13 @@ class WmiClassFlags(IntFlag, boundary=STRICT):
     FORCEUPDATE = 1 << 6
 
 
+@unique
+class WmiInstanceFlags(IntFlag, boundary=STRICT):
+    """WMI instance flags"""
+    UPDATEONLY = 1 << 0
+    CREATEONLY = 1 << 1
+
+
 @dataclass(frozen=True, slots=True)
 class WmiObject:
     """WMI object"""
@@ -122,6 +129,23 @@ class WmiObject:
         return None
 
     @property
+    def instanceflags(self) -> Optional[WmiInstanceFlags]:
+        """Retrieve the instance flags"""
+        if self.properties is None:
+            return None
+
+        for prop in self.properties:
+            if prop.name != "__INSTANCEFLAGS":
+                continue
+
+            if prop.data_type != WmiDataType.SINT32:
+                continue
+
+            return WmiInstanceFlags(prop.value)
+
+        return None
+
+    @property
     def variables(self) -> Iterable[WmiProperty]:
         """Retrieve the class variables"""
         if self.properties is None:
@@ -129,7 +153,8 @@ class WmiObject:
 
         for prop in self.properties:
             match prop.name:
-                case "__CLASS" | "__NAMESPACE" | "__SUPERCLASS" | "__CLASSFLAGS":
+                case "__CLASS" | "__NAMESPACE" | "__SUPERCLASS" | "__CLASSFLAGS" \
+                     | "__INSTANCEFLAGS":
                     continue
                 case _:
                     yield prop

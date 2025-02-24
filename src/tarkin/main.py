@@ -45,12 +45,17 @@ def encode_bmof(o: object, flavors: dict[int, QualifierFlavor]) -> dict[str, obj
         if classflags is not None:
             classflags = classflags.name.lower()
 
+        instanceflags = o.instanceflags
+        if instanceflags is not None:
+            instanceflags = instanceflags.name.lower()
+
         return {
             "name": o.name,
             "object_type": o.object_type.name.lower(),
             "superclass": o.superclass,
             "namespace": o.namespace,
             "classflags": classflags,
+            "instanceflags": instanceflags,
             "qualifiers": o.qualifiers,
             "properties": list(o.variables),
             "methods": o.methods

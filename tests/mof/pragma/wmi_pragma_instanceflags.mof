@@ -1,0 +1,11 @@
+#pragma instanceflags("createonly")
+
+class Class1
+{
+};
+
+#pragma instanceflags("updateonly")
+
+class Class2
+{
+};
