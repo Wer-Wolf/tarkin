@@ -41,12 +41,16 @@ ARGUMENT_PARSER.add_argument(
 def encode_bmof(o: object, flavors: dict[int, QualifierFlavor]) -> dict[str, object]:
     """Handles encoding of BMOF data classes"""
     if isinstance(o, WmiObject):
+        classflags = o.classflags
+        if classflags is not None:
+            classflags = classflags.name.lower()
+
         return {
             "name": o.name,
             "object_type": o.object_type.name.lower(),
             "superclass": o.superclass,
             "namespace": o.namespace,
-            "classflags": o.flags,
+            "classflags": classflags,
             "qualifiers": o.qualifiers,
             "properties": list(o.variables),
             "methods": o.methods

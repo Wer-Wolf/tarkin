@@ -1,0 +1,29 @@
+#pragma classflags ("createonly")
+
+class Class1
+{
+};
+
+#pragma classflags ("forceupdate")
+
+class Class2
+{
+};
+
+#pragma classflags ("safeupdate")
+
+class Class3
+{
+};
+
+#pragma classflags ("updateonly")
+
+class Class4
+{
+};
+
+#pragma classflags ("updateonly", "forceupdate")
+
+class Class5
+{
+};

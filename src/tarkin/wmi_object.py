@@ -4,7 +4,7 @@
 
 from __future__ import annotations
 from dataclasses import dataclass
-from enum import IntEnum, unique, STRICT
+from enum import IntEnum, IntFlag, unique, STRICT
 from itertools import chain
 from typing import Final, Optional, Iterable
 from construct import Struct, Container, Adapter, Int32ul, Prefixed, Tell
@@ -20,6 +20,15 @@ class WmiObjectType(IntEnum, boundary=STRICT):
     """WMI object types"""
     CLASS = 0
     INSTANCE = 1
+
+
+@unique
+class WmiClassFlags(IntFlag, boundary=STRICT):
+    """WMI class flags"""
+    UPDATEONLY = 1 << 0
+    CREATEONLY = 1 << 1
+    SAFEUPDATE = 1 << 5
+    FORCEUPDATE = 1 << 6
 
 
 @dataclass(frozen=True, slots=True)
@@ -96,7 +105,7 @@ class WmiObject:
         return None
 
     @property
-    def flags(self) -> Optional[int]:
+    def classflags(self) -> Optional[WmiClassFlags]:
         """Retrieve the class flags"""
         if self.properties is None:
             return None
@@ -108,7 +117,7 @@ class WmiObject:
             if prop.data_type != WmiDataType.SINT32:
                 continue
 
-            return prop.value
+            return WmiClassFlags(prop.value)
 
         return None
 
