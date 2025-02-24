@@ -55,7 +55,7 @@ class WmiMethod:
 
         return cls(
             name=name,
-            parameters=final_params.values(),
+            parameters=list(final_params.values()),
             qualifiers=qualifiers,
             return_type=return_type
         )
