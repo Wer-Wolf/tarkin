@@ -1,0 +1,40 @@
+
+[Description("TEST") : Amended]
+class ClassWithQualifiers1
+{
+};
+
+[Description("TEST") : DisableOverride]
+class ClassWithQualifiers2
+{
+};
+
+[Description("TEST") : EnableOverride]
+class ClassWithQualifiers3
+{
+};
+
+[Description("TEST") : NotToInstance]
+class ClassWithQualifiers4
+{
+};
+
+[Description("TEST") : NotToSubClass]
+class ClassWithQualifiers5
+{
+};
+
+[Description("TEST") : Restricted]
+class ClassWithQualifiers6
+{
+};
+
+[Description("TEST") : ToInstance]
+class ClassWithQualifiers7
+{
+};
+
+[Description("TEST") : ToSubClass]
+class ClassWithQualifiers8
+{
+};
