@@ -73,3 +73,18 @@ BMOF_WMI_QUALIFIER: Final = WmiQualifierAdapter(
         )
     )
 )
+"""
+The BMOF qualifier structure.
+
+The BMOF qualifier structure starts with a header containing the following entries:
+ - A 32-bit little endian length field specifying the length of the whole qualifier structure
+   including the header in bytes
+ - The data type of the value encoded inside the qualifier structure
+ - A 32-bit little endian heap reference to the name substructure
+ - A 32-bit little endian heap reference to the value substructure
+
+The remaining bytes form the heap containing the name, value and qualifiers
+substructures. The name substructure consists of a single null-terminated utf-16-le string
+specifying the name of the qualifier encoded by the qualifier structure, with the qualifier
+value being encoded by the value substructure.
+"""

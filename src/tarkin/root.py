@@ -57,3 +57,15 @@ BMOF_ROOT: Final = RootAdapter(
         )
     )
 )
+"""
+The BMOF root structure.
+
+The BMOF root structure serves as a container for the BMOF objects encoded inside the BMOF.
+It starts with a header containing the following fields:
+ - A 4-byte magic constant ("FOMB")
+ - A 32-bit little endian length field specifying the length of the whole root structure
+   including the header in bytes
+ - A 32-bit litle endian constant (0x1) with an unknown purpose
+ - Another 32-bit litle endian constant (0x1) with an unknown purpose
+ - A 32-bit count field specifying the number of objects after the header
+"""

@@ -174,7 +174,15 @@ class WmiObjectAdapter(Adapter):
 
 class WmiMethodAdapter(Adapter):
     # pylint: disable=abstract-method
-    """Adapter for converting an WMI property into a WMI method"""
+    """
+    Adapter for converting an WMI property into a WMI method.
+
+    A WMI method is encoded inside a WMI property. This property contains
+    an array of WMI objects named "__PARAMETERS" holding the parameters of
+    the WMI method. WMI method returning void and containing no additional
+    parameters are instead encoded inside a WMI property having the void
+    data type.
+    """
     def _decode(self, obj: WmiProperty, context: Container, path: str) -> WmiMethod:
         """Decode container to WMI object"""
         if obj.data_type == WmiDataType.VOID:
@@ -247,3 +255,19 @@ BMOF_WMI_OBJECT: Final = WmiObjectAdapter(
         includelength=True
     )
 )
+"""
+The BMOF object structure.
+
+The BMOF object structure starts with a header containing the following fields:
+ - A 32-bit little endian length value specifying the length of the whole object
+   structure including the header in bytes
+ - A 32-bit little endian heap reference to the qualifiers substructure
+ - A 32-bit little endian heap reference to the properties substructure
+ - A 32-bit little endian heap reference to the methods substructure
+ - A 32-bit little endian field specfying the object type
+
+The remaining bytes form the heap containing the qualifiers, properties and methods
+substructures. Each substructure consists of a BMOF array containg the corresponding
+qualifiers, properties and methods of the object encoded by the object strucutre.
+Methods are encoded using special properties.
+"""

@@ -98,3 +98,9 @@ class WmiTypeAdapter(Adapter):
 
 
 BMOF_WMI_TYPE: Final = WmiTypeAdapter(Int32ul)
+"""
+The BMOF data type structure.
+
+The BMOF data type structure is a 32-bit little endian integer
+specifying a WMI data type.
+"""

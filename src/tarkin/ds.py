@@ -21,7 +21,11 @@ LIB.ds_decompress.restype = c_int
 
 
 class CompressedDS(Tunnel):
-    """Adapter for converting an doublespace-compressed container"""
+    """
+    Adapter for converting an doublespace-compressed container.
+
+    See https://github.com/Wer-Wolf/libdeds for details.
+    """
     def __init__(self, subcon: Construct, length: Path):
         super().__init__(subcon)
         self.subcon = subcon

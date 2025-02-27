@@ -78,3 +78,20 @@ BMOF_WMI_PROPERTY: Final = WmiPropertyAdapter(
         includelength=True
     )
 )
+"""
+The BMOF property structure.
+
+The BMOF property structure starts with a header containing the following entries:
+ - A 32-bit little-endian length value specifying the length of the whole property structure
+   including the header in bytes
+ - The data type of the value encoded inside the property structure
+ - A 32-bit little endian heap reference to the name substructure
+ - A 32-bit little endian heap reference to the value substructure
+ - A 32-bit little endian heap reference to the qualifiers substructure
+
+The remaining bytes form the heap containing the name, value and qualifiers
+substructures. The name substructure consists of a single null-terminated utf-16-le string
+specifying the name of the property encoded by the property structure, with the property value
+being encoded by the value substructure. The qualifiers substructure on the other hand consists
+of a BMOF array containing the qualifiers of the property encoded by the property structure.
+"""

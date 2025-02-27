@@ -66,3 +66,15 @@ BMOF: Final = BmofAdapter(
         Terminated
     )
 )
+"""
+The basic structure of a BMOF data buffer.
+
+The BMOF data buffer starts with a fixed header containing the following fields:
+ - A 4-byte magic constant ("FOMB")
+ - A 32-bit little endian version field (currently only version 1 is supported)
+ - A 32-bit little endian length field specifying the length of the compressed BMOF data in bytes
+ - A 32-bit little endian length field specifying the length of the decompressed BMOF data in bytes
+
+The BMOF data following the this header is compressed using the DoubleSpace compression algorithm
+and contains the BMOF root structure and an optional flavors section.
+"""

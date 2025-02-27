@@ -108,7 +108,7 @@ def main(args: Namespace) -> int:
             flavors[flavor.offset] = flavor.flavors
 
     dump(bmof.root.objects, sys.stdout, default=lambda o: encode_bmof(o, flavors),
-         ensure_ascii=True, indent=4)
+         ensure_ascii=False, indent=4)
     sys.stdout.write("\n")
 
     return 0

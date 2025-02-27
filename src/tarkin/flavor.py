@@ -62,3 +62,14 @@ BMOF_FLAVORS: Final = FlavorsAdpater(
         )
     )
 )
+"""
+The structure of the flavors section.
+
+The flavors section starts with a header containing the following fields:
+ - A 16-byte magic constant ("BMOFQUALFLAVOR11")
+ - A 32-bit little endian count field specifying the number of flavors after this header
+
+Each flavor consists of two 32-bit little endian fields. The first field specifies the
+offset of the substructure the flavor applies to inside the decompressed BMOF data.
+The second field contains flags specifying which flavors apply to the associated substructure.
+"""

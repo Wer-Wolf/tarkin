@@ -25,7 +25,14 @@ class WmiMethod:
     @classmethod
     def from_properties(cls, name: str, params: Iterable[WmiProperty],
                         qualifiers: list[WmiQualifier]):
-        """Create WMI method from a list of possibly duplicated parameters"""
+        """
+        Create a WMI method from a list of possibly duplicated parameters.
+
+        Each parameter is deduplicated based on its name. Qualifiers of duplicated
+        parameters are added to the qualifiers of the deduplicated parameter.
+        Parameters named "ReturnValue" are treated as describing the return type
+        of the associated WMI method.
+        """
         return_type = WmiType.from_data_type(WmiDataType.VOID)
         final_params = {}
 

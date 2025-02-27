@@ -26,12 +26,26 @@ type WmiData = bool \
 
 class BmofWmiSingleData(Switch):
     # pylint: disable=abstract-method
-    """Parse single WMI data item"""
+    """
+    Parse a single WMI data item.
+
+    The following WMI data types are recognized:
+     - boolean: Parsed as a 16-bit little endian integer containg 0x0 for false
+       or 0xFFFFFF for true.
+     - [u/s]int[8/16/32/64]: Parsed as a corresponding little endian integer.
+     - real[32/64]: Parsed as a corresponding little-endian floating point number.
+     - string: Parsed as a null-terminated utf-16-le string.
+     - object: Parsed as a BMOF object structure.
+
+    All other data types will result in a parser error. Please note that some
+    WMI data types like datetimes have no separate representation and instead
+    use on of the above types when encoding values.
+    """
     def __init__(self, data_type: Callable[[Container], WmiType]) -> None:
         super().__init__(
             lambda context: data_type(context).basic_type,
             {
-                WmiDataType.BOOLEAN: Mapping(Int16ul, {False: 0x0, True: 0xffff}),
+                WmiDataType.BOOLEAN: Mapping(Int16ul, {False: 0x0, True: 0xFFFF}),
                 WmiDataType.UINT8: Int8ul,
                 WmiDataType.SINT8: Int8sl,
                 WmiDataType.UINT16: Int16ul,
