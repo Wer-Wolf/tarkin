@@ -1,0 +1,6 @@
+class Properties
+{
+	uint32 Property;
+
+	uint32 PropertyWithDefaultValue = 32;
+};

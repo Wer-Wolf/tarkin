@@ -1,0 +1,12 @@
+[Description("Class qualifier")]
+class Qualifiers
+{
+	[Description("Property qualifier")]
+	uint32 Property;
+	
+	[Description("Method qualifier")]
+	void Method(
+		[Description("Parameter qualifier")]
+		uint32 argument
+	);
+};

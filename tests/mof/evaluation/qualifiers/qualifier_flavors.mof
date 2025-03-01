@@ -1,0 +1,9 @@
+[WMI :
+	Restricted,
+ Implemented :
+ 	EnableOverride NotToInstance NotToSubClass,
+ Description("Qualifier with flavors") :
+	Amended DisableOverride ToInstance ToSubClass]
+class QualifierFlavors
+{
+};

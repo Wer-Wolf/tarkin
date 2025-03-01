@@ -1,0 +1,23 @@
+#pragma classflags ("updateonly", "forceupdate")
+
+#pragma instanceflags ("updateonly")
+
+#pragma namespace ("\\\\.\\root\\test")
+
+class Pragmas1
+{
+};
+
+#pragma classflags ("createonly")
+
+#pragma instanceflags ("createonly")
+
+class Pragmas2
+{
+};
+
+#pragma classflags ("safeupdate")
+
+class Pragmas3
+{
+};

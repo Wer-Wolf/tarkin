@@ -1,0 +1,24 @@
+class Arrays
+{
+    uint8 Uint8[] = { 0, 64 };
+    sint8 Sint8[] = { 0, -64};
+    uint16 Uint16[] = { 0, 128 };
+    sint16 Sint16[] = { 0, -128 };
+    uint32 Uint32[] = { 0, 256 };
+    sint32 Sint32[] = { 0, -256 };
+    uint64 Uint64[] = { 0, 512 };
+    sint64 Sint64[] = { 0, -512 };
+    string String[] = { "", "Test" };
+    boolean Boolean[] = { false, true };
+    real32 Real32[] = { 0.0, 0.5 };
+    real64 Real64[] = { 0.0, 0.5 };
+    datetime Datetime[] = {
+		"00000000000000.000000:000",
+		"00000001120032.000000:000" };
+    object ref Reference[] = {
+		"Non-existing key",
+		"Another non-existing key" };
+    char16 Char16[] = {
+		'\x00E4', /* Ä */
+		'\x00D6' /* Ö */ };
+};

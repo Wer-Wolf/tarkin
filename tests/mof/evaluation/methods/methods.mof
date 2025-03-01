@@ -1,0 +1,5 @@
+class Methods {
+	void MethodWithoutArguments();
+	
+	boolean MethodWithArguments(uint32 argument);
+};
