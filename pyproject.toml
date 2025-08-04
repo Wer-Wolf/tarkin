@@ -20,6 +20,7 @@ classifiers = [
 ]
 dependencies = [
     "construct ~= 2.10.70",
+    "doublespace ~= 1.0.0"
 ]
 
 [project.readme]
@@ -80,6 +81,7 @@ warn_return_any = true
 warn_unreachable = true
 
 [tool.pylint]
+extension-pkg-allow-list = ["doublespace"]
 max-line-length = 100
 
 [tool.coverage.run]

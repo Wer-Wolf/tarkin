@@ -8,8 +8,7 @@ from the command line
 
 ## Requirements
 
-The `tarkin` utility requires Python >= 3.12 and the [libdeds](https://github.com/Wer-Wolf/libdeds)
-library to work.
+The `tarkin` utility requires Python >= 3.12 to work.
 
 ## Installation
 
