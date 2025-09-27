@@ -146,6 +146,21 @@ class WmiObject:
         return None
 
     @property
+    def alias(self) -> Optional[str]:
+        """Retrieve the object alias"""
+        if self.properties is None:
+            return None
+
+        for prop in self.properties:
+            if prop.name != "__ALIAS":
+                continue
+
+            if prop.data_type != WmiDataType.STRING:
+                continue
+
+            return prop.value
+
+    @property
     def variables(self) -> Iterable[WmiProperty]:
         """Retrieve the class variables"""
         if self.properties is None:
@@ -154,7 +169,7 @@ class WmiObject:
         for prop in self.properties:
             match prop.name:
                 case "__CLASS" | "__NAMESPACE" | "__SUPERCLASS" | "__CLASSFLAGS" \
-                     | "__INSTANCEFLAGS":
+                     | "__INSTANCEFLAGS" | "__ALIAS":
                     continue
                 case _:
                     yield prop

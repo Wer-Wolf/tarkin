@@ -56,6 +56,7 @@ def encode_bmof(o: object, flavors: dict[int, QualifierFlavor]) -> dict[str, obj
             "namespace": o.namespace,
             "classflags": classflags,
             "instanceflags": instanceflags,
+            "alias": o.alias,
             "qualifiers": o.qualifiers,
             "properties": list(o.variables),
             "methods": o.methods

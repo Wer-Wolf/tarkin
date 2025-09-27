@@ -1,0 +1,7 @@
+class AliasClass as $ClassAlias
+{
+};
+
+instance of AliasClass as $InstanceAlias
+{
+};
