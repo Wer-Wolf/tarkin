@@ -67,7 +67,7 @@ class WmiObject:
             return None
 
         for prop in self.properties:
-            if prop.name != "__CLASS":
+            if prop.name.lower() != "__class":
                 continue
 
             if prop.data_type != WmiDataType.STRING:
@@ -84,7 +84,7 @@ class WmiObject:
             return None
 
         for prop in self.properties:
-            if prop.name != "__NAMESPACE":
+            if prop.name.lower() != "__namespace":
                 continue
 
             if prop.data_type != WmiDataType.STRING:
@@ -101,7 +101,7 @@ class WmiObject:
             return None
 
         for prop in self.properties:
-            if prop.name != "__SUPERCLASS":
+            if prop.name.lower() != "__superclass":
                 continue
 
             if prop.data_type != WmiDataType.STRING:
@@ -118,7 +118,7 @@ class WmiObject:
             return None
 
         for prop in self.properties:
-            if prop.name != "__CLASSFLAGS":
+            if prop.name.lower() != "__classflags":
                 continue
 
             if prop.data_type != WmiDataType.SINT32:
@@ -135,7 +135,7 @@ class WmiObject:
             return None
 
         for prop in self.properties:
-            if prop.name != "__INSTANCEFLAGS":
+            if prop.name.lower() != "__instanceflags":
                 continue
 
             if prop.data_type != WmiDataType.SINT32:
@@ -152,7 +152,7 @@ class WmiObject:
             return None
 
         for prop in self.properties:
-            if prop.name != "__ALIAS":
+            if prop.name.lower() != "__alias":
                 continue
 
             if prop.data_type != WmiDataType.STRING:
@@ -167,9 +167,9 @@ class WmiObject:
             return
 
         for prop in self.properties:
-            match prop.name:
-                case "__CLASS" | "__NAMESPACE" | "__SUPERCLASS" | "__CLASSFLAGS" \
-                     | "__INSTANCEFLAGS" | "__ALIAS":
+            match prop.name.lower():
+                case "__class" | "__namespace" | "__superclass" | "__classflags" \
+                     | "__instanceflags" | "__alias":
                     continue
                 case _:
                     yield prop
