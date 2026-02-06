@@ -3,7 +3,7 @@
 """Test for qualifier flavor parsing and building"""
 
 from typing import Final
-from unittest import TestCase
+import pytest
 from construct import ConstError, StreamError, ValidationError
 from tarkin.flavor import BMOF_FLAVORS, QualifierFlavor, Flavors
 
@@ -29,8 +29,8 @@ SINGLE_FLAVOR: Final = bytes.fromhex(
 # Parsing result of SINGLE_FLAVOR
 SINGLE_FLAVOR_RESULT: Final = [
     QualifierFlavor(
-        offset = 0xdeadbeef,
-        flavors = Flavors.TO_INSTANCE | Flavors.TO_SUBCLASS
+        offset=0xdeadbeef,
+        flavors=Flavors.TO_INSTANCE | Flavors.TO_SUBCLASS
     )
 ]
 
@@ -49,12 +49,12 @@ MULTIPLE_FLAVORS: Final = bytes.fromhex(
 # Parsing result of MULTIPLE_FLAVOR
 MULTIPLE_FLAVORS_RESULT: Final = [
     QualifierFlavor(
-        offset = 0xdeadbeef,
-        flavors = Flavors.TO_INSTANCE | Flavors.TO_SUBCLASS
+        offset=0xdeadbeef,
+        flavors=Flavors.TO_INSTANCE | Flavors.TO_SUBCLASS
     ),
     QualifierFlavor(
-        offset = 0x00112233,
-        flavors = 0
+        offset=0x00112233,
+        flavors=0
     )
 ]
 
@@ -93,72 +93,57 @@ INVALID_MAGIC: Final = bytes.fromhex(
     )
 )
 
-class FlavorTest(TestCase):
-    """Tests for qualifier flavor parsing"""
 
-    def test_parse_empty_section(self) -> None:
-        """Test parsing of a section with no qualifier flavors"""
+@pytest.mark.parametrize(
+    "data,expected",
+    [
+        pytest.param(EMPTY_SECTION, [], id="empty"),
+        pytest.param(SINGLE_FLAVOR, SINGLE_FLAVOR_RESULT, id="single"),
+        pytest.param(MULTIPLE_FLAVORS, MULTIPLE_FLAVORS_RESULT, id="multiple")
+    ]
+)
+def test_parsing(data: bytes, expected: list[QualifierFlavor]) -> None:
+    """Test parsing of qualifier flavors"""
 
-        result: list[QualifierFlavor] = BMOF_FLAVORS.parse(EMPTY_SECTION)
-
-        self.assertEqual(len(result), 0)
-
-    def test_build_empty_section(self) -> None:
-        """Test building of a section with no qualifier flavors"""
-
-        result: bytes = BMOF_FLAVORS.build([])
-
-        self.assertEqual(result, EMPTY_SECTION)
-
-    def test_parse_single_flavor(self) -> None:
-        """Test parsing of a section with a single qualifier flavor"""
-
-        result: list[QualifierFlavor] = BMOF_FLAVORS.parse(SINGLE_FLAVOR)
-
-        self.assertEqual(result, SINGLE_FLAVOR_RESULT)
-
-    def test_build_single_flavor(self) -> None:
-        """Test building of a section with a single qualifier flavor"""
-
-        result: bytes = BMOF_FLAVORS.build(SINGLE_FLAVOR_RESULT)
-
-        self.assertEqual(result, SINGLE_FLAVOR)
+    assert BMOF_FLAVORS.parse(data) == expected
 
 
-    def test_parse_multiple_flavors(self) -> None:
-        """Test parsing of a section with multiple qualifier flavors"""
+def test_parse_null_flavor() -> None:
+    """Test parsing of a qualifier flavor with a zero offset"""
 
-        result: list[QualifierFlavor] = BMOF_FLAVORS.parse(MULTIPLE_FLAVORS)
+    with pytest.raises(ValidationError):
+        BMOF_FLAVORS.parse(NULL_FLAVOR)
 
-        self.assertEqual(result, MULTIPLE_FLAVORS_RESULT)
 
-    def test_build_multiple_flavors(self) -> None:
-        """Test building of a section with multiple qualifier flavors"""
+@pytest.mark.parametrize(
+    "data",
+    [
+        pytest.param(INCOMPLETE_FLAVOR, id="incomplete"),
+        pytest.param(MISSING_FLAVOR, id="missing")
+    ]
+)
+def test_parsing_missing_data(data: bytes) -> None:
+    """Test error handling when trying to parse missing data"""
 
-        result: bytes = BMOF_FLAVORS.build(MULTIPLE_FLAVORS_RESULT)
+    with pytest.raises(StreamError):
+        BMOF_FLAVORS.parse(data)
 
-        self.assertEqual(result, MULTIPLE_FLAVORS)
 
-    def test_parse_null_flavor(self) -> None:
-        """Test parsing of a qualifier flavor with a zero offset"""
+def test_parse_invalid_magic() -> None:
+    """Test parsing of a section with an invalid magic number"""
 
-        with self.assertRaises(ValidationError):
-            BMOF_FLAVORS.parse(NULL_FLAVOR)
+    with pytest.raises(ConstError):
+        BMOF_FLAVORS.parse(INVALID_MAGIC)
 
-    def test_parse_incomplete_flavor(self) -> None:
-        """Test parsing of a incomplete qualifier flavor"""
 
-        with self.assertRaises(StreamError):
-            BMOF_FLAVORS.parse(INCOMPLETE_FLAVOR)
-
-    def test_parse_mssing_flavor(self) -> None:
-        """Test parsing of a missing qualifier flavor"""
-
-        with self.assertRaises(StreamError):
-            BMOF_FLAVORS.parse(MISSING_FLAVOR)
-
-    def test_parse_invalid_magic(self) -> None:
-        """Test parsing of a section with an invalid magic number"""
-
-        with self.assertRaises(ConstError):
-            BMOF_FLAVORS.parse(INVALID_MAGIC)
+@pytest.mark.parametrize(
+    "flavors,expected",
+    [
+        pytest.param([], EMPTY_SECTION, id="empty"),
+        pytest.param(SINGLE_FLAVOR_RESULT, SINGLE_FLAVOR, id="single"),
+        pytest.param(MULTIPLE_FLAVORS_RESULT, MULTIPLE_FLAVORS, id="multiple")
+    ]
+)
+def test_building(flavors: list[QualifierFlavor], expected: bytes) -> None:
+    """Test building of qualifier flavors"""
+    assert BMOF_FLAVORS.build(flavors) == expected
