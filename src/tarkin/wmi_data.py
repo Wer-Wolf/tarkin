@@ -25,7 +25,6 @@ type WmiData = bool \
 
 
 class BmofWmiSingleData(Switch):
-    # pylint: disable=abstract-method
     """
     Parse a single WMI data item.
 
@@ -66,7 +65,6 @@ class BmofWmiSingleData(Switch):
 
 
 class BmofWmiData(IfThenElse):
-    # pylint: disable=abstract-method
     """Parse WMI data item"""
     def __init__(self, data_type: Callable[[Container], WmiType]) -> None:
         super().__init__(

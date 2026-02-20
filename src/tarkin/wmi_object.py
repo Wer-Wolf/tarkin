@@ -6,7 +6,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import IntEnum, IntFlag, unique, STRICT
 from itertools import chain
-from typing import Final, Optional, Iterable
+from typing import Final, Optional, Iterable, override
 from construct import Struct, Container, Adapter, Int32ul, Prefixed, Tell
 from .constructs import BmofArray, BmofHeapReference
 from .wmi_type import WmiDataType
@@ -67,11 +67,16 @@ class WmiObject:
             return None
 
         for prop in self.properties:
+            if prop.name is None:
+                continue
+
             if prop.name.lower() != "__class":
                 continue
 
             if prop.data_type != WmiDataType.STRING:
                 continue
+
+            assert isinstance(prop.value, str)
 
             return prop.value
 
@@ -84,11 +89,16 @@ class WmiObject:
             return None
 
         for prop in self.properties:
+            if prop.name is None:
+                continue
+
             if prop.name.lower() != "__namespace":
                 continue
 
             if prop.data_type != WmiDataType.STRING:
                 continue
+
+            assert isinstance(prop.value, str)
 
             return prop.value
 
@@ -101,11 +111,16 @@ class WmiObject:
             return None
 
         for prop in self.properties:
+            if prop.name is None:
+                continue
+
             if prop.name.lower() != "__superclass":
                 continue
 
             if prop.data_type != WmiDataType.STRING:
                 continue
+
+            assert isinstance(prop.value, str)
 
             return prop.value
 
@@ -118,11 +133,16 @@ class WmiObject:
             return None
 
         for prop in self.properties:
+            if prop.name is None:
+                continue
+
             if prop.name.lower() != "__classflags":
                 continue
 
             if prop.data_type != WmiDataType.SINT32:
                 continue
+
+            assert isinstance(prop.value, int)
 
             return WmiClassFlags(prop.value)
 
@@ -135,11 +155,16 @@ class WmiObject:
             return None
 
         for prop in self.properties:
+            if prop.name is None:
+                continue
+
             if prop.name.lower() != "__instanceflags":
                 continue
 
             if prop.data_type != WmiDataType.SINT32:
                 continue
+
+            assert isinstance(prop.value, int)
 
             return WmiInstanceFlags(prop.value)
 
@@ -152,13 +177,20 @@ class WmiObject:
             return None
 
         for prop in self.properties:
+            if prop.name is None:
+                continue
+
             if prop.name.lower() != "__alias":
                 continue
 
             if prop.data_type != WmiDataType.STRING:
                 continue
 
+            assert isinstance(prop.value, str)
+
             return prop.value
+
+        return None
 
     @property
     def variables(self) -> Iterable[WmiProperty]:
@@ -167,6 +199,10 @@ class WmiObject:
             return
 
         for prop in self.properties:
+            if prop.name is None:
+                yield prop
+                continue
+
             match prop.name.lower():
                 case "__class" | "__namespace" | "__superclass" | "__classflags" \
                      | "__instanceflags" | "__alias":
@@ -176,19 +212,19 @@ class WmiObject:
 
 
 class WmiObjectAdapter(Adapter):
-    # pylint: disable=abstract-method
     """Adapter for converting an container into a WMI object"""
-    def _decode(self, obj: Container, context: Container, path: str) -> WmiObject:
+    @override
+    def _decode(self, obj: Container, _context: Container, _path: str) -> WmiObject:
         """Decode container to WMI object"""
         return WmiObject.from_container(obj)
 
-    def _encode(self, obj: WmiObject, context: Container, path: str) -> Container:
+    @override
+    def _encode(self, _obj: WmiObject, _context: Container, _path: str) -> Container:
         """Encode WMI object to container"""
         raise NotImplementedError("Object encoding is not yet implemented")
 
 
 class WmiMethodAdapter(Adapter):
-    # pylint: disable=abstract-method
     """
     Adapter for converting an WMI property into a WMI method.
 
@@ -198,8 +234,12 @@ class WmiMethodAdapter(Adapter):
     parameters are instead encoded inside a WMI property having the void
     data type.
     """
-    def _decode(self, obj: WmiProperty, context: Container, path: str) -> WmiMethod:
+    @override
+    def _decode(self, obj: WmiProperty, _context: Container, _path: str) -> WmiMethod:
         """Decode container to WMI object"""
+        if obj.name is None:
+            raise RuntimeError("Method property has no name")
+
         if obj.data_type == WmiDataType.VOID:
             # void method with no arguments
             return WmiMethod.from_properties(obj.name, [], obj.qualifiers)
@@ -210,7 +250,9 @@ class WmiMethodAdapter(Adapter):
         if not obj.data_type.is_array:
             raise RuntimeError("Method property is not an array")
 
-        for param_obj in obj.value:
+        param_objs: list[WmiObject] = obj.value     # type: ignore[assignment]
+
+        for param_obj in param_objs:
             if param_obj.object_type != WmiObjectType.INSTANCE:
                 raise RuntimeError("Parameter object is not an instance")
 
@@ -226,11 +268,12 @@ class WmiMethodAdapter(Adapter):
                     raise RuntimeError("Parameter object contains methods")
 
         # The method property can contain up to two objects for input and output parameters
-        params = chain.from_iterable(map(lambda o: o.variables, obj.value))
+        params = chain.from_iterable(map(lambda o: o.variables, param_objs))
 
         return WmiMethod.from_properties(obj.name, params, obj.qualifiers)
 
-    def _encode(self, obj: WmiMethod, context: Container, path: str) -> Container:
+    @override
+    def _encode(self, _obj: WmiMethod, _context: Container, _path: str) -> Container:
         """Encode WMI method to a WMI property"""
         raise NotImplementedError("Method encoding is not yet implemented")
 

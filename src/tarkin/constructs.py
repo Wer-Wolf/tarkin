@@ -9,7 +9,6 @@ from construct import Construct, Container, Int32ul, Prefixed, PrefixedArray, If
 
 
 class BmofArray(Prefixed):
-    # pylint: disable=abstract-method
     """"
     BMOF array containing BMOF substructures.
 
@@ -34,7 +33,6 @@ class BmofArray(Prefixed):
 
 
 class BmofHeapReference(IfThenElse):
-    # pylint: disable=abstract-method
     """
     Heap reference to a substructure inside a heap.
 

@@ -5,7 +5,7 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from enum import IntEnum, unique, STRICT
-from typing import Final
+from typing import Final, override
 from construct import Adapter, Container, Int32ul
 
 
@@ -43,7 +43,7 @@ class WmiType:
     is_array: bool
 
     @classmethod
-    def from_data_type(cls, data_type: WmiDataType):
+    def from_data_type(cls, data_type: WmiDataType) -> WmiType:
         """Create WMI type from a simple WMI data type"""
         return cls(
             basic_type=data_type,
@@ -86,13 +86,14 @@ class WmiType:
 
 
 class WmiTypeAdapter(Adapter):
-    # pylint: disable=abstract-method
     """Adapter for converting an integer into an WMI type"""
-    def _decode(self, obj: int, context: Container, path: str) -> WmiType:
+    @override
+    def _decode(self, obj: int, _context: Container, _path: str) -> WmiType:
         """Decode integer to Wmi type"""
         return WmiType.from_int(obj)
 
-    def _encode(self, obj: WmiType, context: Container, path: str) -> int:
+    @override
+    def _encode(self, obj: WmiType, _context: Container, _path: str) -> int:
         """Encode Wmi type to integer"""
         return int(obj)
 

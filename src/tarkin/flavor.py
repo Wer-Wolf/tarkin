@@ -6,7 +6,7 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from enum import IntFlag, unique, STRICT
-from typing import Final
+from typing import Final, override
 from construct import Struct, Const, Int32ul, PrefixedArray, Container, NoneOf, Adapter
 
 
@@ -37,13 +37,14 @@ class QualifierFlavor():
 
 
 class FlavorsAdpater(Adapter):
-    # pylint: disable=abstract-method
     """Adapter for converting an container into a list of qualifier flavors"""
-    def _decode(self, obj: Container, context: Container, path: str) -> list[QualifierFlavor]:
+    @override
+    def _decode(self, obj: Container, _context: Container, _path: str) -> list[QualifierFlavor]:
         """Decode container to qualifier flavors"""
         return [QualifierFlavor.from_container(entry) for entry in obj["entries"]]
 
-    def _encode(self, obj: list[QualifierFlavor], context: Container, path: str) -> Container:
+    @override
+    def _encode(self, obj: list[QualifierFlavor], _context: Container, _path: str) -> Container:
         """Encode qualifier flavors in an object"""
         return Container(
             entries=[Container(offset=f.offset, flavors=int(f.flavors)) for f in obj]

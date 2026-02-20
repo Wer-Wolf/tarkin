@@ -7,7 +7,7 @@ from argparse import ArgumentParser, Namespace
 from typing import Final
 from json import dump
 from .bmof import Bmof, BMOF
-from .flavor import QualifierFlavor
+from .flavor import Flavors
 from .wmi_object import WmiObject
 from .wmi_object import WmiMethod
 from .wmi_property import WmiProperty
@@ -38,29 +38,31 @@ ARGUMENT_PARSER.add_argument(
 )
 
 
-def encode_bmof(o: object, flavors: dict[int, QualifierFlavor]) -> dict[str, object]:
+def encode_bmof(o: object, flavors: dict[int, Flavors]) -> dict[str, object]:
     """Handles encoding of BMOF data classes"""
     if isinstance(o, WmiObject):
-        classflags = o.classflags
-        if classflags is not None:
-            classflags = classflags.name.lower()
-
-        instanceflags = o.instanceflags
-        if instanceflags is not None:
-            instanceflags = instanceflags.name.lower()
-
-        return {
+        object_result: dict[str, object] = {
             "name": o.name,
             "object_type": o.object_type.name.lower(),
             "superclass": o.superclass,
             "namespace": o.namespace,
-            "classflags": classflags,
-            "instanceflags": instanceflags,
+            "classflags": None,
+            "instanceflags": None,
             "alias": o.alias,
             "qualifiers": o.qualifiers,
             "properties": list(o.variables),
             "methods": o.methods
         }
+
+        classflags = o.classflags
+        if classflags is not None and classflags.name is not None:
+            object_result["classflags"] = classflags.name.lower()
+
+        instanceflags = o.instanceflags
+        if instanceflags is not None and instanceflags.name is not None:
+            object_result["instanceflags"] = instanceflags.name.lower()
+
+        return object_result
 
     if isinstance(o, WmiMethod):
         return {
@@ -79,16 +81,18 @@ def encode_bmof(o: object, flavors: dict[int, QualifierFlavor]) -> dict[str, obj
         }
 
     if isinstance(o, WmiQualifier):
-        flavor = flavors.get(o.offset)
-        if flavor is not None:
-            flavor = flavor.name.lower()
-
-        return {
+        qualifier_result: dict[str, object] = {
             "name": o.name,
             "data_type": o.data_type,
             "value": o.value,
-            "flavors": flavor
+            "flavors": None
         }
+
+        flavor = flavors.get(o.offset)
+        if flavor is not None and flavor.name is not None:
+            qualifier_result["flavors"] = flavor.name.lower()
+
+        return qualifier_result
 
     if isinstance(o, WmiType):
         return {

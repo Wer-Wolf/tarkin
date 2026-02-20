@@ -24,7 +24,7 @@ class WmiMethod:
 
     @classmethod
     def from_properties(cls, name: str, params: Iterable[WmiProperty],
-                        qualifiers: list[WmiQualifier]):
+                        qualifiers: Optional[list[WmiQualifier]]) -> WmiMethod:
         """
         Create a WMI method from a list of possibly duplicated parameters.
 
@@ -34,9 +34,12 @@ class WmiMethod:
         of the associated WMI method.
         """
         return_type = WmiType.from_data_type(WmiDataType.VOID)
-        final_params = {}
+        final_params: dict[str, WmiProperty] = {}
 
         for param in params:
+            if param.name is None:
+                raise RuntimeError(f"Encountered parameter without a name in method {name}")
+
             if param.name == "ReturnValue":
                 return_type = param.data_type
             elif param.name in final_params:

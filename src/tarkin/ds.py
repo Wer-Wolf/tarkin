@@ -3,6 +3,7 @@
 """Doublespace decompression"""
 
 from __future__ import annotations
+from typing import override
 from doublespace import decompress
 from construct import Container, Tunnel, Construct, Path, evaluate
 
@@ -18,7 +19,8 @@ class CompressedDS(Tunnel):
         self.subcon = subcon
         self.length = length
 
-    def _decode(self, data: bytes, context: Container, path: str):
+    @override
+    def _decode(self, data: bytes, context: Container, _path: str) -> bytes:
         """Doublespace decompression"""
         length: int = evaluate(self.length, context)
         buffer = bytearray(length)
@@ -27,6 +29,7 @@ class CompressedDS(Tunnel):
 
         return buffer
 
-    def _encode(self, data: bytes, context: Container, path: str):
+    @override
+    def _encode(self, data: bytes, context: Container, _path: str) -> bytes:
         """Doublespace compression"""
         raise NotImplementedError("Doublespace compression not implemented")

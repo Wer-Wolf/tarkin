@@ -4,7 +4,7 @@
 
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import Final, Optional as TOptional
+from typing import Final, Optional as TOptional, override
 from construct import Struct, Int32ul, Const, this, Container, Adapter, Rebuild, len_, \
     Terminated, FixedSized, Optional
 from .ds import CompressedDS
@@ -30,13 +30,14 @@ class Bmof:
 
 
 class BmofAdapter(Adapter):
-    # pylint: disable=abstract-method
     """Adapter for converting an container into a Bmof class"""
-    def _decode(self, obj: Container, context: Container, path: str) -> Bmof:
+    @override
+    def _decode(self, obj: Container, _context: Container, _path: str) -> Bmof:
         """Decode container to BMOF class"""
         return Bmof.from_container(obj)
 
-    def _encode(self, obj: Bmof, context: Container, path: str) -> Container:
+    @override
+    def _encode(self, obj: Bmof, _context: Container, _path: str) -> Container:
         """Encode Bmof class to container"""
         return Container(
             data=Container(

@@ -4,7 +4,7 @@
 
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import Final, Optional
+from typing import Final, Optional, override
 from construct import Struct, Container, Adapter, Int32ul, Tell, Prefixed, CString
 from .constructs import BmofHeapReference
 from .wmi_data import BmofWmiData, WmiData
@@ -35,13 +35,14 @@ class WmiQualifier:
 
 
 class WmiQualifierAdapter(Adapter):
-    # pylint: disable=abstract-method
     """Adapter for converting an container into a WMI qualifier"""
-    def _decode(self, obj: Container, context: Container, path: str) -> WmiQualifier:
+    @override
+    def _decode(self, obj: Container, _context: Container, _path: str) -> WmiQualifier:
         """Decode container to a WMI qualifier"""
         return WmiQualifier.from_container(obj)
 
-    def _encode(self, obj: WmiQualifier, context: Container, path: str) -> Container:
+    @override
+    def _encode(self, _obj: WmiQualifier, _context: Container, _path: str) -> Container:
         """Encode WMI qualifier to container"""
         raise NotImplementedError("Qualifier encoding is not yet implemented")
 

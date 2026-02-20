@@ -4,7 +4,7 @@
 
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import Final, Optional
+from typing import Final, Optional, override
 from construct import Struct, Container, Adapter, Prefixed, Int32ul, Tell, CString
 from .constructs import BmofArray, BmofHeapReference
 from .wmi_data import BmofWmiData, WmiData
@@ -36,13 +36,14 @@ class WmiProperty:
 
 
 class WmiPropertyAdapter(Adapter):
-    # pylint: disable=abstract-method
     """Adapter for converting an container into a WMI property"""
-    def _decode(self, obj: Container, context: Container, path: str) -> WmiProperty:
+    @override
+    def _decode(self, obj: Container, _context: Container, _path: str) -> WmiProperty:
         """Decode container to a WMI property"""
         return WmiProperty.from_container(obj)
 
-    def _encode(self, obj: WmiProperty, context: Container, path: str) -> Container:
+    @override
+    def _encode(self, obj: WmiProperty, _context: Container, _path: str) -> Container:
         """Encode WMI property to container"""
         raise NotImplementedError("Property encoding is not yet implemented")
 

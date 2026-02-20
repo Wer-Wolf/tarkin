@@ -4,7 +4,7 @@
 
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import Final
+from typing import Final, override
 from construct import Struct, Int32ul, Const, Container, Adapter, FixedSized, Rebuild, this, \
     len_, PrefixedArray
 from .wmi_object import BMOF_WMI_OBJECT, WmiObject
@@ -25,13 +25,14 @@ class Root:
 
 
 class RootAdapter(Adapter):
-    # pylint: disable=abstract-method
     """Adapter for converting an container into a Root class"""
-    def _decode(self, obj: Container, context: Container, path: str) -> Root:
+    @override
+    def _decode(self, obj: Container, _context: Container, _path: str) -> Root:
         """Decode container to Root class"""
         return Root.from_container(obj)
 
-    def _encode(self, obj: Root, context: Container, path: str) -> Container:
+    @override
+    def _encode(self, obj: Root, _context: Container, _path: str) -> Container:
         """Encode Root class to container"""
         return Container(
             data=Container(
