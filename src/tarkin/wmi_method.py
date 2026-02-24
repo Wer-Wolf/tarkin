@@ -40,6 +40,9 @@ class WmiMethod:
             if param.name is None:
                 raise RuntimeError(f"Encountered parameter without a name in method {name}")
 
+            if param.qualifiers is None:
+                raise RuntimeError(f"Parameter {param.name} contains no qualifiers")
+
             if param.name == "ReturnValue":
                 return_type = param.data_type
             elif param.name in final_params:
@@ -51,11 +54,7 @@ class WmiMethod:
                 if final_param.value != param.value:
                     raise RuntimeError(f"Parameter {param.name} contains different values")
 
-                if param.qualifiers is None:
-                    continue
-
-                if final_param.qualifiers is None:
-                    final_param.qualifiers = []
+                assert final_param.qualifiers is not None
 
                 for qualifier in param.qualifiers:
                     if qualifier.name not in map(lambda p: p.name, final_param.qualifiers):

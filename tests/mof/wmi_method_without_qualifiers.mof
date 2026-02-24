@@ -1,0 +1,4 @@
+class TestClass
+{
+    void TestMethod(bool TestParameter);
+};
