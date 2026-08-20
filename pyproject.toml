@@ -53,15 +53,16 @@ dependencies = [
     "mypy >= 1.0.0",
     "pylint >= 2.12.2",
     "flake8 >= 5.0.0",
-    "isort >= 5.10.1"
+    "isort >= 5.10.1",
+    "pytest >= 9.1.1"
 ]
 
 [tool.hatch.envs.lint.scripts]
 lint = [
-    "- flake8 src/tarkin",
-    "- pylint src/tarkin"
+    "- flake8 src/tarkin tests",
+    "- pylint src/tarkin tests"
 ]
-typecheck = "mypy -p tarkin"
+typecheck = "mypy -p tarkin -p tests"
 release = [
     "typecheck"
 ]
