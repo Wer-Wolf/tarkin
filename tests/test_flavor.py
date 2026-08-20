@@ -54,7 +54,7 @@ MULTIPLE_FLAVORS_RESULT: Final = [
     ),
     QualifierFlavor(
         offset=0x00112233,
-        flavors=0
+        flavors=Flavors(0)
     )
 ]
 

@@ -27,7 +27,7 @@ class CompressedDS(Tunnel):
 
         decompress(data, buffer)
 
-        return buffer
+        return bytes(buffer)
 
     @override
     def _encode(self, data: bytes, context: Container, _path: str) -> bytes:
