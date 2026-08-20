@@ -7,7 +7,7 @@ from __future__ import annotations
 from typing import Callable
 from construct import Switch, Mapping, Int8ul, Int8sl, Int16ul, Int16sl, Int32sl, Int32ul, \
     Int64ul, Int64sl, Float32l, Float64l, Error, CString, Prefixed, Container, IfThenElse, \
-    FocusedSeq, Const, Array, Rebuild, LazyBound
+    FocusedSeq, Const, Array, Rebuild, LazyBound, this, len_
 from tarkin import wmi_object
 from .wmi_type import WmiDataType, WmiType
 
@@ -76,7 +76,7 @@ class BmofWmiData(IfThenElse):
                     "unknown" / Const(0x1, Int32ul),
                     "count" / Rebuild(
                         Int32ul,
-                        lambda context: len(context.items)
+                        len_(this.items)
                     ),
                     "items" / Prefixed(
                         Int32ul,
