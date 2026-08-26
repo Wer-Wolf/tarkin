@@ -34,6 +34,7 @@ NAMED_QUALIFIER: Final = bytes.fromhex(
         "08 00 00 00"   # Data type (string)
         "00 00 00 00"   # Name offset (0)
         "FF FF FF FF"   # Value offset (placeholder)
+
         "54 00 45 00"   # Null-teminated name string ("TEST")
         "53 00 54 00"
         "00 00"
@@ -55,6 +56,7 @@ VALUE_QUALIFIER: Final = bytes.fromhex(
         "0B 00 00 00"   # Data type (boolean)
         "FF FF FF FF"   # Name offset (placeholder)
         "00 00 00 00"   # Value offset (0)
+
         "FF FF"         # Boolean value (True)
     )
 )
@@ -74,9 +76,11 @@ FULL_QUALIFIER: Final = bytes.fromhex(
         "0B 00 00 00"   # Data type (boolean)
         "00 00 00 00"   # Name offset (0)
         "0A 00 00 00"   # Value offset (10)
+
         "54 00 45 00"   # Null-teminated name string ("TEST")
         "53 00 54 00"
         "00 00"
+
         "FF FF"         # Boolean value (True)
     )
 )
@@ -99,7 +103,7 @@ OVERSIZED_QUALIFIER: Final = bytes.fromhex(
     )
 )
 
-# Undersized WMI
+# Undersized WMI qualifier
 UNDERSIZED_QUALIFIER: Final = bytes.fromhex(
     (
         "0F 00 00 00"   # Length (15 bytes, one byte is missing)
