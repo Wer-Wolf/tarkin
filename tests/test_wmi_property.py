@@ -34,8 +34,8 @@ NAMED_PROPERTY: Final = bytes.fromhex(
         "1E 00 00 00"   # Length (30 bytes)
         "08 00 00 00"   # Data type (string)
         "00 00 00 00"   # Name offset (0)
-        "FF FF FF FF"   # Name offset (placeholder)
         "FF FF FF FF"   # Value offset (placeholder)
+        "FF FF FF FF"   # Qualifiers offset (placeholder)
 
         "54 00 45 00"   # Null-teminated name string ("TEST")
         "53 00 54 00"
