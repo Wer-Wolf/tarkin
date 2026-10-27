@@ -9,7 +9,7 @@ from itertools import chain
 from typing import Final, Optional, Iterable, override
 from construct import Struct, Container, Adapter, Int32ul, Prefixed, Tell
 from .constructs import BmofArray, BmofHeapReference
-from .wmi_type import WmiDataType
+from .wmi_type import WmiDataType, WmiType
 from .wmi_method import WmiMethod
 from .wmi_property import BMOF_WMI_PROPERTY, WmiProperty
 from .wmi_qualifier import BMOF_WMI_QUALIFIER, WmiQualifier
@@ -244,11 +244,8 @@ class WmiMethodAdapter(Adapter):
             # void method with no arguments
             return WmiMethod.from_properties(obj.name, [], obj.qualifiers)
 
-        if obj.data_type.basic_type != WmiDataType.OBJECT:
-            raise RuntimeError("Method property does not contain objects")
-
-        if not obj.data_type.is_array:
-            raise RuntimeError("Method property is not an array")
+        if obj.data_type != WmiType(WmiDataType.OBJECT, True):
+            raise RuntimeError("Method property is not an object array")
 
         param_objs: list[WmiObject] = obj.value     # type: ignore[assignment]
 

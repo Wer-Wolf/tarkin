@@ -3,11 +3,11 @@
 """Tests for WMI object parsing"""
 
 from typing import Final
-from construct import ConstructError
+from construct import Computed, ConstructError
 import pytest
 from tarkin.wmi_method import WmiMethod
-from tarkin.wmi_object import BMOF_WMI_OBJECT, WmiObject, WmiObjectType, WmiClassFlags, \
-    WmiInstanceFlags
+from tarkin.wmi_object import BMOF_WMI_OBJECT, WmiMethodAdapter, WmiObject, WmiObjectType, \
+    WmiClassFlags, WmiInstanceFlags
 from tarkin.wmi_property import WmiProperty
 from tarkin.wmi_qualifier import WmiQualifier
 from tarkin.wmi_type import WmiType, WmiDataType
@@ -275,6 +275,150 @@ INVALID_METHODS_OFFSET_OBJECT: Final = bytes.fromhex(
     )
 )
 
+# WMI method property without a name
+NAMELESS_METHOD_PROPERTY: Final = WmiProperty(
+    data_type=WmiType(WmiDataType.OBJECT, True),
+    name=None,
+    value=[
+        WmiObject(
+            object_type=WmiObjectType.INSTANCE,
+            qualifiers=None,
+            properties=[
+                WmiProperty(
+                    data_type=WmiType(WmiDataType.STRING, False),
+                    name="__CLASS",
+                    value="__PARAMETERS",
+                    qualifiers=None
+                )
+            ],
+            methods=None
+        )
+    ],
+    qualifiers=None
+)
+
+# WMI method property with a mismatching type
+TYPE_MISMATCH_METHOD_PROPERTY: Final = WmiProperty(
+    data_type=WmiType(WmiDataType.OBJECT, False),
+    name="TEST",
+    value=WmiObject(
+        object_type=WmiObjectType.INSTANCE,
+        qualifiers=None,
+        properties=[
+            WmiProperty(
+                data_type=WmiType(WmiDataType.STRING, False),
+                name="__CLASS",
+                value="__PARAMETERS",
+                qualifiers=None
+            )
+        ],
+        methods=None
+    ),
+    qualifiers=None
+)
+
+# WMI method property with class objects
+WRONG_OBJECT_TYPE_METHOD_PROPERTY: Final = WmiProperty(
+    data_type=WmiType(WmiDataType.OBJECT, True),
+    name="TEST",
+    value=[
+        WmiObject(
+            object_type=WmiObjectType.CLASS,
+            qualifiers=None,
+            properties=[
+                WmiProperty(
+                    data_type=WmiType(WmiDataType.STRING, False),
+                    name="__CLASS",
+                    value="__PARAMETERS",
+                    qualifiers=None
+                )
+            ],
+            methods=None
+        )
+    ],
+    qualifiers=None
+)
+
+# WMI method property with a mismatching object name
+WRONG_NAME_METHOD_PROPERTY: Final = WmiProperty(
+    data_type=WmiType(WmiDataType.OBJECT, True),
+    name="TEST",
+    value=[
+        WmiObject(
+            object_type=WmiObjectType.INSTANCE,
+            qualifiers=None,
+            properties=[
+                WmiProperty(
+                    data_type=WmiType(WmiDataType.STRING, False),
+                    name="__CLASS",
+                    value="WrongName",
+                    qualifiers=None
+                )
+            ],
+            methods=None
+        )
+    ],
+    qualifiers=None
+)
+
+# WMI method property with surplus object qualifiers
+SURPLUS_QUALIFIERS_METHOD_PROPERTY: Final = WmiProperty(
+    data_type=WmiType(WmiDataType.OBJECT, True),
+    name="TEST",
+    value=[
+        WmiObject(
+            object_type=WmiObjectType.INSTANCE,
+            qualifiers=[
+                WmiQualifier(
+                    data_type=WmiType(WmiDataType.STRING, False),
+                    value=None,
+                    name=None,
+                    offset=0
+                )
+            ],
+            properties=[
+                WmiProperty(
+                    data_type=WmiType(WmiDataType.STRING, False),
+                    name="__CLASS",
+                    value="__PARAMETERS",
+                    qualifiers=None
+                )
+            ],
+            methods=None
+        )
+    ],
+    qualifiers=None
+)
+
+# WMI method property with surplus object methods
+SURPLUS_METHODS_METHOD_PROPERTY: Final = WmiProperty(
+    data_type=WmiType(WmiDataType.OBJECT, True),
+    name="TEST",
+    value=[
+        WmiObject(
+            object_type=WmiObjectType.INSTANCE,
+            qualifiers=None,
+            properties=[
+                WmiProperty(
+                    data_type=WmiType(WmiDataType.STRING, False),
+                    name="__CLASS",
+                    value="__PARAMETERS",
+                    qualifiers=None
+                )
+            ],
+            methods=[
+                WmiMethod(
+                    name="TEST",
+                    parameters=[],
+                    qualifiers=None,
+                    return_type=WmiType(WmiDataType.VOID, False)
+                )
+            ]
+        )
+    ],
+    qualifiers=None
+)
+
 
 @pytest.mark.parametrize(
     "data,expected",
@@ -316,8 +460,9 @@ def test_parsing_invalid_object_type() -> None:
         BMOF_WMI_OBJECT.parse(INVALID_TYPE_OBJECT)
 
 
-def test_parsing_special_proeprties() -> None:
+def test_parsing_special_properties() -> None:
     """Test parsing of special properties"""
+
     variable = WmiProperty(
         data_type=WmiType(WmiDataType.STRING, False),
         name="TestProperty",
@@ -376,3 +521,23 @@ def test_parsing_special_proeprties() -> None:
     assert obj.instanceflags == WmiInstanceFlags.UPDATEONLY
     assert obj.alias == "TestAlias"
     assert list(obj.variables) == [variable]
+
+
+@pytest.mark.parametrize(
+    "prop",
+    [
+        pytest.param(NAMELESS_METHOD_PROPERTY, id="nameless"),
+        pytest.param(TYPE_MISMATCH_METHOD_PROPERTY, id="type_mismatch"),
+        pytest.param(WRONG_OBJECT_TYPE_METHOD_PROPERTY, id="wrong_object_type"),
+        pytest.param(WRONG_NAME_METHOD_PROPERTY, id="wrong_name"),
+        pytest.param(SURPLUS_QUALIFIERS_METHOD_PROPERTY, id="surplus_qualifiers"),
+        pytest.param(SURPLUS_METHODS_METHOD_PROPERTY, id="surplus_methods"),
+    ]
+)
+def test_parsing_invalid_methods_properties(prop: WmiProperty) -> None:
+    """Test error handling when trying to parse invalid method properties"""
+
+    adapter = WmiMethodAdapter(Computed(prop))
+
+    with pytest.raises(RuntimeError):
+        adapter.parse(bytes())
